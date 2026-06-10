@@ -1,0 +1,75 @@
+/* Violet — default, defined in :root */
+
+[data-palette="rose"] {
+  --accent: #f43f5e;
+  --accent-light: #fb7185;
+  --accent-dark: #e11d48;
+  --accent-glow: rgba(244, 63, 94, 0.35);
+  --orb-1: #e11d48;
+  --orb-2: #f43f5e;
+  --orb-3: #fb7185;
+}
+
+[data-palette="cyan"] {
+  --accent: #06b6d4;
+  --accent-light: #22d3ee;
+  --accent-dark: #0891b2;
+  --accent-glow: rgba(6, 182, 212, 0.35);
+  --orb-1: #0891b2;
+  --orb-2: #06b6d4;
+  --orb-3: #22d3ee;
+}
+
+[data-palette="emerald"] {
+  --accent: #10b981;
+  --accent-light: #34d399;
+  --accent-dark: #059669;
+  --accent-glow: rgba(16, 185, 129, 0.35);
+  --orb-1: #059669;
+  --orb-2: #10b981;
+  --orb-3: #34d399;
+}
+
+[data-palette="amber"] {
+  --accent: #f59e0b;
+  --accent-light: #fbbf24;
+  --accent-dark: #d97706;
+  --accent-glow: rgba(245, 158, 11, 0.35);
+  --orb-1: #d97706;
+  --orb-2: #f59e0b;
+  --orb-3: #fbbf24;
+}
+
+[data-palette="crimson"] {
+  --accent: #ef4444;
+  --accent-light: #f87171;
+  --accent-dark: #b91c1c;
+  --accent-glow: rgba(239, 68, 68, 0.35);
+  --orb-1: #b91c1c;
+  --orb-2: #ef4444;
+  --orb-3: #f87171;
+}
+
+[data-palette="indigo"] {
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --accent-dark: #4338ca;
+  --accent-glow: rgba(99, 102, 241, 0.35);
+  --orb-1: #4338ca;
+  --orb-2: #6366f1;
+  --orb-3: #818cf8;
+}
+
+[data-palette="violet"] {
+  --accent: #a855f7;
+  --accent-light: #c084fc;
+  --accent-dark: #7c3aed;
+  --accent-glow: rgba(168, 85, 247, 0.35);
+  --orb-1: #7c3aed;
+  --orb-2: #a855f7;
+  --orb-3: #c084fc;
+}
+
+[data-theme="light"][data-palette] {
+  --accent-glow: color-mix(in srgb, var(--accent) 18%, transparent);
+}

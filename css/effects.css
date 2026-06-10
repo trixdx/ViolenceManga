@@ -1,0 +1,361 @@
+/* ── Page transitions ── */
+.content.page-enter {
+  animation: pageEnter 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Staggered cards ── */
+.fx-stagger .manga-grid .manga-card {
+  animation: cardReveal 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.fx-stagger .manga-grid .manga-card:nth-child(1) { animation-delay: 0.02s; }
+.fx-stagger .manga-grid .manga-card:nth-child(2) { animation-delay: 0.05s; }
+.fx-stagger .manga-grid .manga-card:nth-child(3) { animation-delay: 0.08s; }
+.fx-stagger .manga-grid .manga-card:nth-child(4) { animation-delay: 0.11s; }
+.fx-stagger .manga-grid .manga-card:nth-child(5) { animation-delay: 0.14s; }
+.fx-stagger .manga-grid .manga-card:nth-child(6) { animation-delay: 0.17s; }
+.fx-stagger .manga-grid .manga-card:nth-child(n+7) { animation-delay: 0.2s; }
+
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fx-stagger .hero-banner {
+  animation: heroReveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes heroReveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fx-stagger .page-header {
+  animation: fadeDown 0.4s ease both;
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Card hover effects ── */
+body.fx-cards .manga-card {
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+}
+
+body.fx-cards .manga-card:hover {
+  transform: translateY(-6px) scale(1.02);
+}
+
+body.fx-cards .manga-card-cover img {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.fx-cards .manga-card:hover .manga-card-cover img {
+  transform: scale(1.08);
+}
+
+/* ── Glow effects ── */
+body.fx-glow .btn-primary {
+  animation: btnGlow 3s ease-in-out infinite;
+}
+
+@keyframes btnGlow {
+  0%, 100% { box-shadow: 0 4px 16px var(--accent-glow); }
+  50% { box-shadow: 0 6px 28px var(--accent-glow), 0 0 20px var(--accent-glow); }
+}
+
+body.fx-glow .hero-banner::after {
+  animation: glowPulse 4s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+body.fx-glow .brand-icon {
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+body.fx-glow .nav-item.active {
+  box-shadow: inset 0 0 12px var(--accent-glow);
+}
+
+/* ── Blur / glass ── */
+body:not(.fx-blur) .sidebar,
+body:not(.fx-blur) .topbar,
+body:not(.fx-blur) .reader-header,
+body:not(.fx-blur) .reader-footer {
+  backdrop-filter: none !important;
+}
+
+body.fx-blur .sidebar {
+  backdrop-filter: blur(24px) saturate(1.2);
+}
+
+body.fx-blur .topbar {
+  backdrop-filter: blur(16px);
+}
+
+/* ── Background orbs ── */
+body:not(.fx-orbs) .app-bg .orb {
+  display: none;
+}
+
+body.fx-orbs .orb {
+  animation: float 20s ease-in-out infinite;
+}
+
+/* ── Nav & UI polish ── */
+.nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 0;
+  background: linear-gradient(180deg, var(--accent-light), var(--accent));
+  border-radius: 0 3px 3px 0;
+  transform: translateY(-50%);
+  transition: height var(--transition);
+}
+
+.nav-item.active::before {
+  height: 60%;
+}
+
+.nav-item:not(.fx-off):active {
+  transform: scale(0.98);
+}
+
+.settings-nav-item,
+.auth-tab,
+.theme-option,
+.palette-swatch {
+  transition: all var(--transition);
+}
+
+.settings-nav-item:hover,
+.auth-tab:not(.active):hover {
+  transform: translateX(3px);
+}
+
+/* ── Modal & toast ── */
+.modal-overlay:not([hidden]) .modal {
+  animation: modalPop 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.toast {
+  animation: toastIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── Settings preview ── */
+.fx-preview-card {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, var(--bg-surface)), var(--bg-surface));
+  position: relative;
+  overflow: hidden;
+}
+
+.fx-preview-card::after {
+  content: '';
+  position: absolute;
+  right: -20px;
+  top: -20px;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, var(--accent-glow), transparent 70%);
+  pointer-events: none;
+}
+
+.fx-preview-card h4 {
+  margin-bottom: 8px;
+}
+
+.fx-preview-swatches {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.fx-preview-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.15);
+}
+
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.palette-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  background: var(--bg-elevated);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-family: var(--font);
+}
+
+.palette-swatch:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.palette-swatch.active {
+  border-color: var(--accent);
+  color: var(--accent-light);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.palette-swatch-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.palette-swatch-dots span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.settings-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 24px 0 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.settings-section-title:first-of-type {
+  margin-top: 8px;
+  border-top: none;
+  padding-top: 0;
+}
+
+/* ── Reduced motion ── */
+body.fx-off *,
+body.fx-off *::before,
+body.fx-off *::after {
+  animation: none !important;
+  transition-duration: 0.01ms !important;
+}
+
+body.fx-off .manga-card:hover {
+  transform: none !important;
+}
+
+body.fx-off .content.page-enter {
+  animation: none;
+  opacity: 1;
+  transform: none;
+}
+
+/* ── iOS-style bold typography ── */
+body.font-ios-bold {
+  --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.font-ios-bold .nav-item,
+body.font-ios-bold .bottom-nav-item,
+body.font-ios-bold .btn,
+body.font-ios-bold label,
+body.font-ios-bold .setting-row label,
+body.font-ios-bold .tab-btn,
+body.font-ios-bold .settings-nav-item,
+body.font-ios-bold .search-bar input,
+body.font-ios-bold .manga-card-info h3,
+body.font-ios-bold .page-title,
+body.font-ios-bold .topbar-title h2,
+body.font-ios-bold .user-info strong,
+body.font-ios-bold .stat-card span,
+body.font-ios-bold .hero-stat span {
+  font-weight: 600;
+}
+
+body.font-ios-bold h1,
+body.font-ios-bold h2,
+body.font-ios-bold h3,
+body.font-ios-bold h4,
+body.font-ios-bold .section-title,
+body.font-ios-bold .page-header h2,
+body.font-ios-bold .brand-title,
+body.font-ios-bold .stat-card strong,
+body.font-ios-bold .hero-stat strong {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+body.font-ios-bold .nav-item.active,
+body.font-ios-bold .btn-primary,
+body.font-ios-bold .level-badge {
+  font-weight: 700;
+}

@@ -1,0 +1,16 @@
+{
+  "name": "violence-manga",
+  "version": "1.0.0",
+  "description": "Manga reader with purple theme",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:api": "npm run dev --prefix server",
+    "dev:all": "start cmd /k \"npm run dev:api\" && vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  }
+}
