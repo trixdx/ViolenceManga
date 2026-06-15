@@ -101,7 +101,9 @@ export async function renderHome(container, navigate) {
     `;
 
     document.getElementById('hero-search-focus')?.addEventListener('click', () => {
-      document.getElementById('search-input')?.focus();
+      const input = document.getElementById('search-input');
+      input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      input?.focus();
     });
     container.querySelector('[data-goto="browse"]')?.addEventListener('click', () => navigate('browse'));
 

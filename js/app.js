@@ -78,6 +78,12 @@ function renderRoute(route, params = {}) {
 
 function initSearch() {
   const input = document.getElementById('search-input');
+  const bar = document.getElementById('search-bar');
+
+  bar?.addEventListener('click', (e) => {
+    if (e.target === input) return;
+    input?.focus();
+  });
 
   input?.addEventListener('input', () => {
     clearTimeout(searchTimeout);

@@ -601,14 +601,62 @@ body.layout-dock .orb-2 {
 }
 
 @media (max-width: 900px) {
+  body.layout-dock {
+    --dock-height: auto;
+  }
+
   body.layout-dock .dock-header {
-    padding: 0 16px;
-    gap: 12px;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    padding: 8px 12px 10px;
+    gap: 8px;
+  }
+
+  body.layout-dock .dock-brand {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
   }
 
   body.layout-dock .dock-nav { display: none; }
-  body.layout-dock .dock-end .dock-search { display: none; }
+
+  body.layout-dock .dock-end {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    margin-left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  body.layout-dock .dock-end .dock-search {
+    display: flex !important;
+    width: 100%;
+    max-width: none;
+    height: 44px;
+    order: 1;
+  }
+
+  body.layout-dock .dock-end .dock-search input {
+    font-size: 16px;
+  }
+
+  body.layout-dock .dock-actions {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    order: 2;
+  }
+
   body.layout-dock .dock-actions .menu-toggle { display: grid !important; }
+
+  .hero-search-hint {
+    display: none;
+  }
 
   body.layout-dock .sidebar {
     display: flex !important;
@@ -624,6 +672,16 @@ body.layout-dock .orb-2 {
   }
 
   body.layout-dock .page-shell { padding: 0 16px 80px; }
+}
+
+.search-bar input {
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+}
+
+.search-bar input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
 }
 
 /* ── Light theme (dock layout) ── */
@@ -794,35 +852,20 @@ body.layout-dock .orb-2 {
 /* ── Mobile UX ── */
 @media (max-width: 640px) {
   body.layout-dock {
-    --dock-height: 56px;
+    --dock-height: auto;
   }
 
   body.layout-dock .dock-header {
-    padding: 0 10px;
-    gap: 8px;
+    padding: 8px 10px 10px;
   }
 
   body.layout-dock .dock-brand .brand-title {
     font-size: 1.1rem;
   }
 
-  body.layout-dock .dock-profile {
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    gap: 0;
-  }
-
-  body.layout-dock .dock-profile .avatar {
-    width: 32px;
-    height: 32px;
-  }
-
   body.layout-dock .dock-actions {
-    gap: 6px;
-  }
-
-  body.layout-dock .dock-end {
+    top: 8px;
+    right: 10px;
     gap: 6px;
   }
 
