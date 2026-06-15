@@ -4,9 +4,10 @@ import {
 } from '../store.js';
 import {
   renderMangaGrid, bindMangaCards, bindFavButtons,
-  showToast, escapeHtml, renderContinueSection, bindContinueCards,
+  showToast, escapeHtml, renderContinueSection, bindContinueCards, placeholderCover,
 } from '../ui.js';
 import { t, getListLabel } from '../i18n.js';
+import { resolveImageUrl } from '../image-url.js';
 
 const LIST_ICONS = {
   favorites: '❤️',
@@ -66,7 +67,7 @@ function renderTabContent(container, navigate, tab) {
     content.innerHTML = state.history.length
       ? `<div class="history-list">${state.history.map(h => `
           <div class="history-item" data-manga-id="${h.mangaId}">
-            <img src="${h.cover || 'https://placehold.co/40x56/7c3aed/f0eaff?text=?'}" alt="" />
+            <img src="${resolveImageUrl(h.cover) || placeholderCover(h.title, 40, 56)}" alt="" />
             <div class="info">
               <h4>${escapeHtml(h.title)}</h4>
               <span>${escapeHtml(h.chapter || t('library.recently'))}</span>

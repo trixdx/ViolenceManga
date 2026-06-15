@@ -27,7 +27,7 @@ const defaultState = {
     autoTranslate: true,
     autoBookmark: true,
     showNsfw: false,
-    chapterSort: 'desc',
+    chapterSort: 'asc',
     compactSidebar: false,
     pageSpread: false,
     imageProxy: true,
@@ -66,10 +66,15 @@ function storageKeyFor(userId) {
 }
 
 function mergeLoaded(parsed) {
+  const settings = { ...defaultState.settings, ...parsed.settings };
+  if (!parsed._migrations?.chapterSortAscV2) {
+    settings.chapterSort = 'asc';
+  }
+  settings.imageProxy = true;
   return {
     ...structuredClone(defaultState),
     ...parsed,
-    settings: { ...defaultState.settings, ...parsed.settings },
+    settings,
     lists: { ...defaultState.lists, ...parsed.lists },
     listMeta: parsed.listMeta || {},
     bookmarks: parsed.bookmarks || {},
@@ -77,6 +82,7 @@ function mergeLoaded(parsed) {
     genreStats: parsed.genreStats || {},
     stats: { ...defaultState.stats, ...parsed?.stats },
     profile: { ...defaultState.profile, ...parsed?.profile },
+    _migrations: { ...(parsed._migrations || {}), chapterSortAscV2: true },
   };
 }
 

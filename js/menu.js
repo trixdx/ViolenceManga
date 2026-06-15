@@ -1,7 +1,6 @@
 import { getState } from './store.js';
 import { getRouteMeta, getBreadcrumbs, getBreadcrumbRoute, navigate } from './router.js';
 import { updateSidebar } from './ui.js';
-import { applyAvatarEl } from './avatars.js';
 import { t, applyDocumentI18n } from './i18n.js';
 import { isLoggedIn, getCurrentUser, logout, getUserPublicInfo } from './auth.js';
 import { showToast } from './ui.js';
@@ -23,17 +22,18 @@ function initSidebar() {
   });
 
   document.getElementById('menu-toggle')?.addEventListener('click', toggleSidebar);
-  const brand = document.getElementById('sidebar-brand');
-  brand?.addEventListener('click', () => navigate('home'));
-  brand?.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      navigate('home');
-    }
+  document.querySelectorAll('[data-home-brand]').forEach(brand => {
+    brand.addEventListener('click', () => navigate('home'));
+    brand.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        navigate('home');
+      }
+    });
   });
 
-  document.getElementById('sidebar-user')?.addEventListener('click', () => {
-    toggleUserMenu();
+  document.querySelectorAll('.sidebar-user-trigger').forEach(el => {
+    el.addEventListener('click', () => toggleUserMenu());
   });
 }
 
@@ -62,7 +62,7 @@ function initUserMenu() {
   });
 
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('#user-menu') && !e.target.closest('#sidebar-user') && !e.target.closest('#topbar-user')) {
+    if (!e.target.closest('#user-menu') && !e.target.closest('.sidebar-user-trigger')) {
       closeUserMenu();
     }
   });
@@ -137,10 +137,11 @@ export function updateAuthMenu() {
     `;
   }
 
-  const sidebarHint = document.getElementById('user-auth-hint');
-  if (sidebarHint) {
-    sidebarHint.textContent = loggedIn ? user.email : t('auth.guest');
-  }
+  document.querySelectorAll('[data-user-hint]').forEach(hint => {
+    if (!hint.dataset.userEmail) {
+      hint.textContent = loggedIn ? user.email : t('auth.guest');
+    }
+  });
 }
 
 export function updateMenu(route, params = {}) {
@@ -184,16 +185,7 @@ export function updateMenu(route, params = {}) {
   }
 
   updateSidebar();
-  updateTopbarUser();
   updateAuthMenu();
-}
-
-function updateTopbarUser() {
-  const state = getState();
-  const el = document.getElementById('topbar-user-name');
-  const av = document.getElementById('topbar-user-avatar');
-  if (el) el.textContent = state.profile.name;
-  if (av) applyAvatarEl(av, state.profile);
 }
 
 function toggleSidebar() {

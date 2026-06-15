@@ -24,34 +24,35 @@ export async function renderBrowse(container, navigate) {
     }
 
     container.innerHTML = `
-      <div class="page-header">
-        <h2>${t('browse.title')}</h2>
-        <p>${t('browse.subtitle')}</p>
+      <div class="page-hero-strip">
+        <div>
+          <p class="eyebrow">${t('nav.browse')}</p>
+          <h2>${t('browse.title')}</h2>
+          <p class="page-hero-desc">${t('browse.subtitle')}</p>
+        </div>
       </div>
 
       ${partialError ? `<div class="browse-warn">⚠️ ${t('browse.warn', { msg: partialError })}</div>` : ''}
 
-      <div class="browse-filters">
-        <h3 class="section-title">${t('home.genres')}</h3>
-        <div class="tags genre-tags">
-          ${POPULAR_GENRES.map(g => `<span class="tag" data-tag="${g}">${translateGenre(g)}</span>`).join('')}
-        </div>
+      <div class="section-head"><h3>${t('home.genres')}</h3></div>
+      <div class="genre-strip">
+        ${POPULAR_GENRES.map(g => `<button type="button" class="genre-chip" data-tag="${g}">${translateGenre(g)}</button>`).join('')}
       </div>
 
       ${trending.length ? `
-        <h3 class="section-title" style="margin-top:28px">${t('browse.top')}</h3>
+        <div class="section-head"><h3>${t('browse.top')}</h3></div>
         ${renderMangaGrid(trending, cardOpts())}
       ` : ''}
 
       ${recent.length ? `
-        <h3 class="section-title" style="margin-top:28px">${t('browse.updates')}</h3>
+        <div class="section-head"><h3>${t('browse.updates')}</h3></div>
         ${renderMangaGrid(recent, cardOpts())}
       ` : ''}
     `;
 
     bindMangaCards(container, (id) => navigate('manga', { id }));
     bindFavButtons(container, toggleFav);
-    container.querySelectorAll('.tag[data-tag]').forEach(tag => {
+    container.querySelectorAll('.genre-chip[data-tag]').forEach(tag => {
       tag.addEventListener('click', () => navigate('genre', { tag: tag.dataset.tag }));
     });
   } catch (err) {

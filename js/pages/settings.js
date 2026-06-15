@@ -85,7 +85,8 @@ function renderTab(tab, s, profile) {
 
         <div class="fx-preview-card" id="fx-preview">
           <h4>Предпросмотр · ${palette.name}</h4>
-          <p style="color:var(--text-secondary);font-size:0.85rem">Так будут выглядеть акценты интерфейса</p>
+          <p class="fx-preview-brand">Violence</p>
+          <p style="color:var(--text-secondary);font-size:0.85rem">Акценты: навигация, кнопки, название</p>
           <div class="fx-preview-swatches">
             ${palette.colors.map(c => `<div class="fx-preview-swatch" style="background:${c}"></div>`).join('')}
           </div>
@@ -159,8 +160,8 @@ function renderTab(tab, s, profile) {
         <div class="setting-row">
           <div><label>Сортировка глав</label><div class="desc">Порядок отображения глав в списке</div></div>
           <select class="select-input" data-setting="chapterSort">
+            <option value="asc" ${s.chapterSort === 'asc' ? 'selected' : ''}>Старые сверху (пролог → новые)</option>
             <option value="desc" ${s.chapterSort === 'desc' ? 'selected' : ''}>Новые сверху</option>
-            <option value="asc" ${s.chapterSort === 'asc' ? 'selected' : ''}>Старые сверху</option>
           </select>
         </div>
         <div class="setting-row">
@@ -184,8 +185,8 @@ function renderTab(tab, s, profile) {
       return `
         <h3>${t('settings.technical')}</h3>
         <div class="setting-row">
-          <div><label>${t('settings.imageProxy')}</label><div class="desc">${t('settings.imageProxyDesc')} (только dev-сервер)</div></div>
-          <div class="toggle ${s.imageProxy !== false ? 'active' : ''}" data-setting="imageProxy"></div>
+          <div><label>${t('settings.imageProxy')}</label><div class="desc">${t('settings.imageProxyDesc')}</div></div>
+          <div class="toggle active" aria-hidden="true" style="pointer-events:none;opacity:0.85"></div>
         </div>
         <div class="setting-row">
           <div><label>${t('settings.prefetch')}</label><div class="desc">${t('settings.prefetchDesc')}</div></div>
@@ -215,7 +216,7 @@ function renderTab(tab, s, profile) {
       return `
         <h3>Контент и язык</h3>
         <div class="setting-row">
-          <div><label>Язык перевода</label><div class="desc">Приоритетный язык глав</div></div>
+          <div><label>${t('settings.contentLang')}</label><div class="desc">${t('settings.contentLangDesc')}</div></div>
           <select class="select-input" data-setting="language">
             <option value="ru" ${s.language === 'ru' ? 'selected' : ''}>Русский</option>
             <option value="en" ${s.language === 'en' ? 'selected' : ''}>English</option>

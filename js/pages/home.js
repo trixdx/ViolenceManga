@@ -1,12 +1,13 @@
 import { searchManga, searchByTag, getTrending, getRecent, POPULAR_GENRES } from '../api.js';
 import { getState, getContinueReading, isFavorite, addFavorite, removeFavorite, incrementStat } from '../store.js';
 import {
-  renderMangaGrid, showLoading, bindMangaCards, bindFavButtons,
-  showToast, renderContinueSection, bindContinueCards,
+  renderMangaGrid, showLoading, bindMangaCards, bindMangaTiles,
+  bindFavButtons, showToast, bindContinueCards, escapeHtml, placeholderCover,
 } from '../ui.js';
 import { checkAchievements } from '../achievements.js';
 import { t } from '../i18n.js';
 import { translateGenre } from '../translate.js';
+import { resolveImageUrl } from '../image-url.js';
 
 const cardOpts = () => ({ showFav: true, isFavorite: (id) => isFavorite(id) });
 
@@ -29,40 +30,84 @@ export async function renderHome(container, navigate) {
     const continueItems = getContinueReading();
 
     container.innerHTML = `
-      <div class="hero-banner">
-        <div>
-          <h2>${t('home.welcome', { name: state.profile.name })}</h2>
+      <div class="dashboard-hero">
+        <div class="dashboard-hero-main">
+          <p class="eyebrow">MangaDex Reader</p>
+          <h1>${t('home.welcome', { name: state.profile.name })}</h1>
           <p>${t('home.subtitle')}</p>
+          <button type="button" class="hero-search-hint" id="hero-search-focus">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
+            Найти мангу… <kbd>Ctrl K</kbd>
+          </button>
         </div>
-        <div class="hero-stats">
-          <div class="hero-stat"><strong>${state.stats.chaptersRead}</strong><span>${t('home.chapters')}</span></div>
-          <div class="hero-stat"><strong>${state.stats.pagesRead}</strong><span>${t('home.pages')}</span></div>
-          <div class="hero-stat"><strong>${state.favorites.length}</strong><span>${t('home.favorites')}</span></div>
+        <div class="dashboard-stats">
+          <div class="dash-stat-card">
+            <strong class="dash-stat-value">${state.stats.chaptersRead}</strong>
+            <span>${t('home.chapters')}</span>
+          </div>
+          <div class="dash-stat-card">
+            <strong class="dash-stat-value">${state.stats.pagesRead}</strong>
+            <span>${t('home.pages')}</span>
+          </div>
+          <div class="dash-stat-card">
+            <strong class="dash-stat-value">${state.favorites.length}</strong>
+            <span>${t('home.favorites')}</span>
+          </div>
+          <div class="dash-stat-card dash-stat-wide">
+            <div>
+              <strong class="dash-stat-value dash-stat-level">Ур. ${state.profile.level}</strong>
+              <span>${state.profile.xp} XP</span>
+            </div>
+            <span class="dash-stat-note">${state.stats.chaptersRead} глав прочитано</span>
+          </div>
         </div>
       </div>
 
-      ${renderContinueSection(continueItems, navigate)}
+      ${continueItems.length ? `
+        <div class="section-head"><h3>${t('continue.title')}</h3></div>
+        <div class="manga-rail continue-rail">
+          ${continueItems.map(item => `
+            <div class="continue-card" data-manga-id="${item.mangaId}">
+              <img src="${resolveImageUrl(item.cover) || placeholderCover(item.mangaTitle, 80, 110)}" alt="" />
+              <div class="continue-info">
+                <h4>${escapeHtml(item.mangaTitle || t('common.manga'))}</h4>
+                <p>${escapeHtml(item.chapterTitle || '')}</p>
+                <span>${t('continue.page', { n: (item.pageIndex || 0) + 1 })}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
 
-      <h3 class="section-title" style="${continueItems.length ? 'margin-top:32px' : ''}">${t('home.genres')}</h3>
-      <div class="tags genre-tags">
-        ${POPULAR_GENRES.map(g => `<span class="tag" data-tag="${g}">${translateGenre(g)}</span>`).join('')}
+      <div class="section-head"><h3>${t('home.genres')}</h3></div>
+      <div class="genre-strip">
+        ${POPULAR_GENRES.map(g => `<button type="button" class="genre-chip" data-tag="${g}">${translateGenre(g)}</button>`).join('')}
       </div>
 
       ${trending.length ? `
-        <h3 class="section-title" style="margin-top:32px">${t('home.trending')}</h3>
-        ${renderMangaGrid(trending, cardOpts())}
+        <div class="section-head">
+          <h3>${t('home.trending')}</h3>
+          <button type="button" class="see-all" data-goto="browse">${t('nav.browse')} →</button>
+        </div>
+        ${renderMangaGrid(trending.slice(0, 12), cardOpts())}
       ` : ''}
 
       ${recent.length ? `
-        <h3 class="section-title" style="margin-top:32px">${t('home.recent')}</h3>
-        ${renderMangaGrid(recent, cardOpts())}
+        <div class="section-head"><h3>${t('home.recent')}</h3></div>
+        ${renderMangaGrid(recent.slice(0, 12), cardOpts())}
       ` : ''}
     `;
 
+    document.getElementById('hero-search-focus')?.addEventListener('click', () => {
+      document.getElementById('search-input')?.focus();
+    });
+    container.querySelector('[data-goto="browse"]')?.addEventListener('click', () => navigate('browse'));
+
     bindMangaCards(container, (id) => navigate('manga', { id }));
+    bindMangaTiles(container, (id) => navigate('manga', { id }));
     bindFavButtons(container, (id) => toggleFav(id));
     bindContinueCards(container, navigate);
-    container.querySelectorAll('.tag[data-tag]').forEach(tag => {
+    container.querySelectorAll('.genre-chip[data-tag]').forEach(tag => {
       tag.addEventListener('click', () => navigate('genre', { tag: tag.dataset.tag }));
     });
   } catch (err) {

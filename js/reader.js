@@ -1,4 +1,5 @@
 import { getChapterPages } from './api.js';
+import { needsImageProxy } from './image-url.js';
 import {
   getState, markChapterRead, addHistory, saveBookmark,
   getBookmark, updateSettings, addReadingTime, logPagesRead,
@@ -208,7 +209,7 @@ function bindPageImages(vp) {
 
     img.addEventListener('load', markDone);
     img.addEventListener('error', () => {
-      if (!triedFallback && direct && img.src !== direct) {
+      if (!triedFallback && direct && img.src !== direct && !needsImageProxy(direct)) {
         triedFallback = true;
         img.src = direct;
         armTimeout();
@@ -331,7 +332,11 @@ function updatePageInfo() {
   if (isSpreadMode()) {
     const spreadNum = Math.floor(currentPage / 2) + 1;
     const totalSpreads = Math.ceil(total / 2);
-    info.textContent = `${spreadNum} / ${totalSpreads} (стр. ${currentPage + 1})`;
+    const pageA = currentPage + 1;
+    const pageB = Math.min(currentPage + 2, total);
+    info.textContent = pageB > pageA
+      ? `${spreadNum} / ${totalSpreads} · ${pageA}–${pageB}`
+      : `${spreadNum} / ${totalSpreads} · ${pageA}`;
   } else {
     info.textContent = `${currentPage + 1} / ${total}`;
   }

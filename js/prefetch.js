@@ -1,12 +1,12 @@
 import { getState } from './store.js';
-import { resolveImageUrl, wrapPageUrls } from './image-url.js';
+import { resolveImageUrl, wrapPageUrls, needsImageProxy } from './image-url.js';
 
 export { resolveImageUrl, wrapPageUrls };
 
 const inflight = new Map();
 
 export function shouldUseImageProxy() {
-  return getState().settings.imageProxy !== false && import.meta.env.DEV;
+  return true;
 }
 
 function loadImage(url) {
@@ -19,10 +19,10 @@ function loadImage(url) {
     img.onload = () => { inflight.delete(url); resolve(url); };
     img.onerror = () => {
       inflight.delete(url);
-      const direct = url.includes('mangadex-img?url=')
+      const direct = url.includes('mangadex-img?url=') || url.includes('img-proxy?url=')
         ? decodeURIComponent(url.split('url=')[1])
         : null;
-      if (direct && direct !== url) {
+      if (direct && direct !== url && !needsImageProxy(direct)) {
         loadImage(direct).then(resolve).catch(reject);
         return;
       }

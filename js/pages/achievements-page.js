@@ -27,13 +27,13 @@ export function renderAchievements(container, navigate, filter = 'all') {
 
     <div class="achievements-summary">
       <div class="ach-summary-card">
-        <strong>${unlocked}</strong><span>Получено</span>
+        <strong class="stat-value">${unlocked}</strong><span>Получено</span>
       </div>
       <div class="ach-summary-card">
-        <strong>${ACHIEVEMENTS.length - unlocked}</strong><span>Осталось</span>
+        <strong class="stat-value">${ACHIEVEMENTS.length - unlocked}</strong><span>Осталось</span>
       </div>
       <div class="ach-summary-card">
-        <strong>${Math.round((unlocked / ACHIEVEMENTS.length) * 100)}%</strong><span>Прогресс</span>
+        <strong class="stat-value">${Math.round((unlocked / ACHIEVEMENTS.length) * 100)}%</strong><span>Прогресс</span>
       </div>
     </div>
 

@@ -6,6 +6,7 @@ import {
   checkServerHealth, isServerMode,
   apiRegister, apiLogin, apiLogout, apiMe,
 } from './server-api.js';
+import { randomId } from './uuid.js';
 
 let currentUser = null;
 
@@ -145,8 +146,8 @@ async function registerLocal({ login, email, password, passwordConfirm }) {
   if (Object.values(users).some(u => u.login === normLogin)) throw new Error('Этот логин уже занят');
   if (Object.values(users).some(u => u.email === normEmail)) throw new Error('Этот email уже зарегистрирован');
 
-  const salt = crypto.randomUUID();
-  const userId = crypto.randomUUID();
+  const salt = randomId();
+  const userId = randomId();
   const guestData = exportCurrentState();
   users[userId] = {
     id: userId,

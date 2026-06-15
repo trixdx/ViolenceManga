@@ -5,6 +5,7 @@ import { config } from './config.js';
 import { pingDb } from './db.js';
 import authRoutes from './routes/auth.js';
 import stateRoutes from './routes/state.js';
+import imgProxyRoutes from './routes/imgProxy.js';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.get('/api/health', async (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/state', stateRoutes);
+app.use('/api/img-proxy', imgProxyRoutes);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

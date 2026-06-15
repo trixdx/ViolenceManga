@@ -158,6 +158,5 @@ function resizeImageFile(file, size) {
 
 export function refreshAllAvatars() {
   const profile = getState().profile;
-  applyAvatarEl(document.getElementById('user-avatar'), profile);
-  applyAvatarEl(document.getElementById('topbar-user-avatar'), profile);
+  document.querySelectorAll('[data-user-avatar]').forEach(el => applyAvatarEl(el, profile));
 }

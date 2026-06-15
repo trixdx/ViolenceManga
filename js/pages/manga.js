@@ -3,7 +3,8 @@ import {
   getState, isFavorite, addFavorite, removeFavorite, addHistory,
   incrementStat, getBookmark, addToList, getMangaListStatus, updateSettings, logGenres,
 } from '../store.js';
-import { showLoading, escapeHtml, showToast, bindTagButtons } from '../ui.js';
+import { showLoading, escapeHtml, showToast, bindTagButtons, placeholderCover } from '../ui.js';
+import { resolveImageUrl } from '../image-url.js';
 import { checkAchievements } from '../achievements.js';
 import { t } from '../i18n.js';
 import {
@@ -31,7 +32,7 @@ export async function renderMangaDetail(container, mangaId, navigate, openReader
     const fav = isFavorite(mangaId);
     const bookmark = getBookmark(mangaId);
     const listStatus = getMangaListStatus(mangaId);
-    const cover = manga.cover || `https://placehold.co/300x400/7c3aed/f0eaff?text=${encodeURIComponent(manga.title.slice(0, 2))}`;
+    const cover = resolveImageUrl(manga.cover) || placeholderCover(manga.title, 300, 400);
 
     addHistory({ mangaId, title: manga.title, cover, chapter: bookmark?.chapterTitle || '' });
 
@@ -39,7 +40,11 @@ export async function renderMangaDetail(container, mangaId, navigate, openReader
       ? cachedChapters.find(c => c.id === bookmark.chapterId)
       : null;
 
-    const startChapter = resumeChapter || cachedChapters[cachedChapters.length - 1];
+    const sort = state.settings.chapterSort || 'asc';
+    const firstChapter = sort === 'asc'
+      ? cachedChapters[0]
+      : cachedChapters[cachedChapters.length - 1];
+    const startChapter = resumeChapter || firstChapter;
 
     const readBtnText = resumeChapter
       ? t('manga.continue', { chapter: resumeChapter.title })
@@ -47,14 +52,18 @@ export async function renderMangaDetail(container, mangaId, navigate, openReader
         ? t('manga.readStart')
         : t('manga.noChapters');
 
-    const langNotice = chapterData.noPreferredLang && chapterData.availableLanguages?.length
-      ? `<div class="chapter-lang-notice">
-          <p>${t('manga.langNotice', {
-            lang: getLanguageName(chapterData.preferredLang),
-            langs: chapterData.availableLanguages.map(getLanguageName).join(', '),
-          })}</p>
-          <p class="chapter-lang-hint">${t('manga.soloHint')}</p>
-        </div>`
+    const langNotice = chapterData.activeLanguage
+      ? (chapterData.usedFallback || chapterData.noPreferredLang
+        ? `<div class="chapter-lang-notice chapter-lang-warn">
+            <p>${t('manga.langFallback', {
+              active: getLanguageName(chapterData.activeLanguage),
+              preferred: getLanguageName(chapterData.preferredLang),
+            })}</p>
+            <p class="chapter-lang-hint">${t('manga.langFallbackHint')}</p>
+          </div>`
+        : `<div class="chapter-lang-notice chapter-lang-ok">
+            <p>${t('manga.langActive', { lang: getLanguageName(chapterData.activeLanguage) })}</p>
+          </div>`)
       : '';
 
     const chapterList = cachedChapters.length

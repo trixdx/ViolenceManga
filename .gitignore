@@ -1,6 +1,11 @@
 node_modules/
 server/node_modules/
+deploy/node_modules/
 dist/
+.deploy-stage/
+violence-deploy.tar.gz
+tmp-*.json
+.netlify
 .DS_Store
 *.log
 .env

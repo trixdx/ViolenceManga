@@ -33,6 +33,7 @@ export function setAuthCookie(res, userId) {
   res.cookie(COOKIE, token, {
     httpOnly: true,
     sameSite: 'lax',
+    secure: config.cookieSecure,
     maxAge: 30 * 24 * 60 * 60 * 1000,
     path: '/',
   });
@@ -40,7 +41,7 @@ export function setAuthCookie(res, userId) {
 }
 
 export function clearAuthCookie(res) {
-  res.clearCookie(COOKIE, { path: '/' });
+  res.clearCookie(COOKIE, { path: '/', secure: config.cookieSecure });
 }
 
 export { COOKIE };

@@ -25,12 +25,8 @@ export async function cacheChapter(chapterId, mangaId, meta, pages, onProgress) 
   const blobs = [];
   for (let i = 0; i < pages.length; i++) {
     onProgress?.(i + 1, pages.length);
-    const url = pages[i].direct || pages[i].url;
-    try {
-      blobs.push(await blobFromUrl(url));
-    } catch {
-      blobs.push(await blobFromUrl(pages[i].url));
-    }
+    const url = pages[i].url || pages[i].direct;
+    blobs.push(await blobFromUrl(url));
   }
 
   const record = {

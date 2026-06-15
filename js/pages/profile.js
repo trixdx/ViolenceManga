@@ -65,14 +65,14 @@ export function renderProfile(container, navigate) {
 
       <div>
         <div class="stats-grid">
-          <div class="stat-card"><strong>${state.stats.chaptersRead}</strong><span>Глав</span></div>
-          <div class="stat-card"><strong>${state.stats.pagesRead}</strong><span>Страниц</span></div>
-          <div class="stat-card"><strong>${state.favorites.length}</strong><span>Избранное</span></div>
-          <div class="stat-card"><strong>${state.lists.reading.length}</strong><span>Читаю</span></div>
-          <div class="stat-card"><strong>${state.stats.mangaOpened}</strong><span>Открыто</span></div>
-          <div class="stat-card"><strong>${formatReadTime(state.stats.totalReadTime)}</strong><span>Чтение</span></div>
-          <div class="stat-card"><strong>${unlockedCount}/${ACHIEVEMENTS.length}</strong><span>Достижений</span></div>
-          <div class="stat-card"><strong>${state.stats.searchCount}</strong><span>Поисков</span></div>
+          <div class="stat-card"><strong class="stat-value">${state.stats.chaptersRead}</strong><span>Глав</span></div>
+          <div class="stat-card"><strong class="stat-value">${state.stats.pagesRead}</strong><span>Страниц</span></div>
+          <div class="stat-card"><strong class="stat-value">${state.favorites.length}</strong><span>Избранное</span></div>
+          <div class="stat-card"><strong class="stat-value">${state.lists.reading.length}</strong><span>Читаю</span></div>
+          <div class="stat-card"><strong class="stat-value">${state.stats.mangaOpened}</strong><span>Открыто</span></div>
+          <div class="stat-card"><strong class="stat-value">${formatReadTime(state.stats.totalReadTime)}</strong><span>Чтение</span></div>
+          <div class="stat-card"><strong class="stat-value">${unlockedCount}/${ACHIEVEMENTS.length}</strong><span>Достижений</span></div>
+          <div class="stat-card"><strong class="stat-value">${state.stats.searchCount}</strong><span>Поисков</span></div>
         </div>
 
         <h3 class="section-title" style="margin-top:24px">Ближайшие достижения</h3>
@@ -140,7 +140,7 @@ export function renderProfile(container, navigate) {
     }
     updateProfile(updates);
     document.getElementById('profile-name-display').textContent = name;
-    document.getElementById('user-name').textContent = name;
+    document.querySelectorAll('[data-user-name]').forEach(el => { el.textContent = name; });
     applyAvatarEl(document.getElementById('profile-avatar'), getState().profile);
     refreshAllAvatars();
     document.getElementById('profile-edit').hidden = true;

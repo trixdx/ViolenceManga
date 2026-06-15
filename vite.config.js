@@ -1,51 +1,18 @@
 import { defineConfig } from 'vite';
-import https from 'node:https';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 
-function mangadexImageProxy() {
-  return {
-    name: 'mangadex-image-proxy',
-    configureServer(server) {
-      server.middlewares.use('/mangadex-img', (req, res) => {
-        const target = new URL(req.url || '', 'http://localhost').searchParams.get('url');
-        if (!target || !/\.mangadex\.network\//.test(target)) {
-          res.statusCode = 400;
-          res.end('Invalid url');
-          return;
-        }
+const REMOTE = process.env.VIOLENCE_PROXY || 'https://147.45.253.205';
 
-        const request = https.get(target, {
-          headers: {
-            Referer: 'https://mangadex.org/',
-            'User-Agent': 'ViolenceMangaReader/1.0',
-          },
-        }, (upstream) => {
-          if (upstream.statusCode && upstream.statusCode >= 400) {
-            res.statusCode = upstream.statusCode;
-            upstream.resume();
-            res.end();
-            return;
-          }
-          res.statusCode = 200;
-          res.setHeader('Content-Type', upstream.headers['content-type'] || 'image/jpeg');
-          res.setHeader('Cache-Control', 'public, max-age=86400');
-          upstream.pipe(res);
-        });
-
-        request.on('error', () => {
-          if (!res.headersSent) {
-            res.statusCode = 502;
-            res.end('Proxy error');
-          }
-        });
-
-        req.on('close', () => request.destroy());
-      });
-    },
-  };
-}
+const remoteProxy = {
+  target: REMOTE,
+  changeOrigin: true,
+  secure: false,
+};
 
 export default defineConfig({
+  plugins: [basicSsl()],
   server: {
+    https: true,
     port: 5173,
     strictPort: true,
     open: true,
@@ -55,12 +22,22 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
       },
-      '/mangadex-api': {
-        target: 'https://api.mangadex.org',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/mangadex-api/, ''),
-      },
+      '/mangadex-api': remoteProxy,
+      '/mangadex-img': remoteProxy,
+      '/translate-proxy': remoteProxy,
     },
   },
-  plugins: [mangadexImageProxy()],
+  preview: {
+    https: true,
+    port: 5173,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+      },
+      '/mangadex-api': remoteProxy,
+      '/mangadex-img': remoteProxy,
+      '/translate-proxy': remoteProxy,
+    },
+  },
 });

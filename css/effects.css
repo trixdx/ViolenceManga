@@ -227,6 +227,17 @@ body.fx-orbs .orb {
   margin-bottom: 8px;
 }
 
+.fx-preview-brand {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 4px 0 8px;
+  background: linear-gradient(90deg, var(--text-primary), var(--accent-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 .fx-preview-swatches {
   display: flex;
   gap: 8px;
@@ -348,7 +359,9 @@ body.font-ios-bold h4,
 body.font-ios-bold .section-title,
 body.font-ios-bold .page-header h2,
 body.font-ios-bold .brand-title,
-body.font-ios-bold .stat-card strong,
+body.font-ios-bold .stat-value,
+body.font-ios-bold .dash-stat-value,
+body.font-ios-bold .hero-stat .stat-value,
 body.font-ios-bold .hero-stat strong {
   font-weight: 700;
   letter-spacing: -0.025em;

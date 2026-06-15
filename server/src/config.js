@@ -4,7 +4,8 @@ dotenv.config();
 export const config = {
   port: parseInt(process.env.PORT || '3001', 10),
   jwtSecret: process.env.JWT_SECRET || 'dev-secret',
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  corsOrigin: process.env.CORS_ORIGIN || 'https://localhost:5173',
+  cookieSecure: process.env.COOKIE_SECURE !== 'false',
   db: {
     server: process.env.DB_SERVER || 'WINDOWTRAGIC\\SQLEXPRESS',
     database: process.env.DB_NAME || 'ViolenceManga',
@@ -39,7 +40,7 @@ export const defaultState = {
     autoTranslate: true,
     autoBookmark: true,
     showNsfw: false,
-    chapterSort: 'desc',
+    chapterSort: 'asc',
     compactSidebar: false,
     pageSpread: false,
     imageProxy: true,

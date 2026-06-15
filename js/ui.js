@@ -2,6 +2,7 @@ import { getState } from './store.js';
 import { isLoggedIn, getCurrentUser } from './auth.js';
 import { applyAvatarEl, refreshAllAvatars } from './avatars.js';
 import { t } from './i18n.js';
+import { resolveImageUrl } from './image-url.js';
 
 export function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
@@ -88,8 +89,28 @@ export function showLoading(container) {
   container.innerHTML = '<div class="loading-spinner"></div>';
 }
 
+export function placeholderCover(text = '?', w = 300, h = 400) {
+  const ch = String(text || '?').slice(0, 2).replace(/[<>&"']/g, '');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect fill="#1a1230" width="100%" height="100%"/><text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" fill="#c4b5e8" font-size="${Math.round(Math.min(w, h) * 0.22)}" font-family="system-ui,sans-serif">${ch}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+const COVER_PLACEHOLDER = placeholderCover('?');
+
+function coverSrc(url, title, size = '300x400') {
+  const resolved = resolveImageUrl(url);
+  if (resolved) return resolved;
+  const [w, h] = size.split('x').map(Number);
+  return placeholderCover(title, w || 300, h || 400);
+}
+
+function coverImgTag(url, title, size = '300x400') {
+  const src = coverSrc(url, title, size);
+  const fb = COVER_PLACEHOLDER;
+  return `<img src="${src}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${fb}'" />`;
+}
+
 export function renderMangaCard(manga, options = {}) {
-  const cover = manga.cover || `https://placehold.co/300x400/7c3aed/f0eaff?text=${encodeURIComponent(manga.title.slice(0, 2))}`;
   const isFav = typeof options.isFavorite === 'function'
     ? options.isFavorite(manga.id)
     : !!options.isFavorite;
@@ -106,7 +127,7 @@ export function renderMangaCard(manga, options = {}) {
   return `
     <div class="manga-card" data-manga-id="${manga.id}">
       <div class="manga-card-cover">
-        <img src="${cover}" alt="${escapeHtml(manga.title)}" loading="lazy" />
+        ${coverImgTag(manga.cover, manga.title)}
         ${manga.status ? `<span class="manga-card-badge">${manga.status}</span>` : ''}
         ${favBtn}
       </div>
@@ -116,6 +137,33 @@ export function renderMangaCard(manga, options = {}) {
       </div>
     </div>
   `;
+}
+
+export function renderMangaRail(mangaList, options = {}) {
+  if (!mangaList.length) return '';
+  return `<div class="manga-rail">${mangaList.map(m => renderMangaTile(m, options)).join('')}</div>`;
+}
+
+export function renderMangaTile(manga, options = {}) {
+  const tagStr = (manga.tags || [])
+    .map(tg => typeof tg === 'string' ? tg : tg.name)
+    .slice(0, 1).join('');
+
+  return `
+    <article class="manga-tile" data-manga-id="${manga.id}">
+      <div class="manga-tile-cover">
+        ${coverImgTag(manga.cover, manga.title, '200x280')}
+      </div>
+      <h4>${escapeHtml(manga.title)}</h4>
+      <div class="manga-tile-meta">${manga.year || ''}${tagStr ? ` · ${tagStr}` : ''}</div>
+    </article>
+  `;
+}
+
+export function bindMangaTiles(container, onClick) {
+  container.querySelectorAll('.manga-tile').forEach(tile => {
+    tile.addEventListener('click', () => onClick(tile.dataset.mangaId));
+  });
 }
 
 export function renderMangaGrid(mangaList, options = {}) {
@@ -135,7 +183,7 @@ export function renderContinueSection(items, navigate) {
     <div class="continue-grid">
       ${items.map(item => `
         <div class="continue-card" data-manga-id="${item.mangaId}">
-          <img src="${item.cover || 'https://placehold.co/80x110/7c3aed/f0eaff?text=?'}" alt="" />
+          <img src="${resolveImageUrl(item.cover) || placeholderCover(item.mangaTitle || t('common.manga'), 80, 110)}" alt="" />
           <div class="continue-info">
             <h4>${escapeHtml(item.mangaTitle || t('common.manga'))}</h4>
             <p>${escapeHtml(item.chapterTitle || '')}</p>
@@ -156,14 +204,18 @@ export function bindContinueCards(container, navigate) {
 
 export function updateSidebar() {
   const state = getState();
-  document.getElementById('user-name').textContent = state.profile.name;
-  const hint = document.getElementById('user-auth-hint');
-  if (hint) {
-    hint.textContent = isLoggedIn()
-      ? (getCurrentUser()?.email || `Ур. ${state.profile.level}`)
-      : `Ур. ${state.profile.level} · Гость`;
-  }
-  applyAvatarEl(document.getElementById('user-avatar'), state.profile);
+  document.querySelectorAll('[data-user-name]').forEach(el => {
+    el.textContent = state.profile.name;
+  });
+  const hintText = isLoggedIn()
+    ? (getCurrentUser()?.email || `Ур. ${state.profile.level}`)
+    : `Ур. ${state.profile.level} · Гость`;
+  document.querySelectorAll('[data-user-hint]').forEach(el => {
+    el.textContent = hintText;
+  });
+  document.querySelectorAll('[data-user-avatar]').forEach(el => {
+    applyAvatarEl(el, state.profile);
+  });
 
   const badge = document.getElementById('notif-badge');
   const count = state.notifications.length;

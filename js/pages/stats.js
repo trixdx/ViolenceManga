@@ -15,9 +15,9 @@ export function renderStats(container) {
     </div>
 
     <div class="stats-summary">
-      <div class="stat-card"><strong>${state.stats.pagesRead}</strong><span>${t('stats.totalPages')}</span></div>
-      <div class="stat-card"><strong>${state.stats.chaptersRead}</strong><span>${t('stats.totalChapters')}</span></div>
-      <div class="stat-card"><strong>${formatReadTime(state.stats.totalReadTime)}</strong><span>${t('stats.readTime')}</span></div>
+      <div class="stat-card"><strong class="stat-value">${state.stats.pagesRead}</strong><span>${t('stats.totalPages')}</span></div>
+      <div class="stat-card"><strong class="stat-value">${state.stats.chaptersRead}</strong><span>${t('stats.totalChapters')}</span></div>
+      <div class="stat-card"><strong class="stat-value">${formatReadTime(state.stats.totalReadTime)}</strong><span>${t('stats.readTime')}</span></div>
     </div>
 
     <div class="stats-charts">

@@ -22,9 +22,13 @@ export function applyVisualSettings(settings = {}) {
   const root = document.documentElement;
   const palette = settings.palette || 'violet';
   const speed = settings.transitionSpeed || 'normal';
+  const paletteDef = PALETTES.find(p => p.id === palette) || PALETTES[0];
 
   root.setAttribute('data-palette', palette);
   root.style.setProperty('--transition', TRANSITION_SPEEDS[speed] || TRANSITION_SPEEDS.normal);
+
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+  if (themeColor) themeColor.setAttribute('content', paletteDef.colors[1]);
 
   const animations = settings.animations !== false;
   const glow = settings.effectsGlow !== false;

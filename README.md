@@ -16,12 +16,17 @@
 
 ## Запуск
 
-```bash
-npm install
-npm run dev
+```powershell
+cd C:\Users\artem\Violence
+npm.cmd install
+npm.cmd run dev
 ```
 
+Или двойной клик по `start.bat`.
+
 Откройте http://localhost:5173
+
+> MangaDex может требовать VPN в некоторых регионах.
 
 ## Сборка
 

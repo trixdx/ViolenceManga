@@ -43,7 +43,7 @@ const STRINGS = {
     'home.genres': 'Жанры',
     'home.trending': 'Популярное',
     'home.recent': 'Новые главы',
-    'home.apiError': 'Сервер MangaDex не отвечает — проверьте интернет',
+    'home.apiError': 'Сервер MangaDex не отвечает — проверьте интернет и VPN',
     'home.loadError': 'Ошибка загрузки: {msg}',
     'home.retry': 'Повторить',
     'browse.title': 'Каталог',
@@ -89,6 +89,9 @@ const STRINGS = {
     'manga.pages': 'стр.',
     'manga.langNotice': 'На языке «{lang}» читаемых глав нет. Доступны переводы: {langs}.',
     'manga.soloHint': 'Для «Поднятие уровня» (Solo Leveling) русского скана на MangaDex нет — ниже показаны доступные главы на других языках.',
+    'manga.langActive': 'Перевод глав: {lang}. Текст внутри страниц — на этом языке.',
+    'manga.langFallback': 'Русского перевода глав нет — показан {active} (вместо {preferred}).',
+    'manga.langFallbackHint': 'Текст в пузырях на страницах будет на языке перевода, а не на русском. Смените «Язык контента» в настройках или выберите другую мангу с русским сканом.',
     'manga.externalOnly': 'Главы этой манги доступны только на внешних сайтах (Webnovel, MangaPlus и др.) — их нельзя читать в этом приложении.',
     'manga.noScans': 'На MangaDex для этой манги нет сканов с картинками. Попробуйте другую мангу или откройте официальный сайт.',
     'manga.externalCount': 'Внешних глав: {n}',
@@ -131,15 +134,17 @@ const STRINGS = {
     'settings.tab.data': 'Данные',
     'settings.notFound': 'Раздел не найден',
     'settings.technical': 'Техническое',
-    'settings.imageProxy': 'Прокси изображений',
-    'settings.imageProxyDesc': 'Стабильная загрузка страниц через dev-сервер',
+    'settings.imageProxy': 'Прокси MangaDex',
+    'settings.imageProxyDesc': 'Всегда включён — API и картинки идут через сервер, VPN не нужен',
     'settings.prefetch': 'Предзагрузка',
     'settings.prefetchDesc': 'Заранее грузить следующие страницы и главу',
     'settings.prefetchAhead': 'Страниц вперёд',
     'settings.uiLang': 'Язык интерфейса',
     'settings.uiLangDesc': 'Русский или English',
     'settings.autoTranslate': 'Автоперевод на русский',
-    'settings.autoTranslateDesc': 'Названия, описания, жанры и главы с MangaDex',
+    'settings.autoTranslateDesc': 'Названия, описания, жанры и главы — через глоссарий и умный перевод',
+    'settings.contentLang': 'Язык контента',
+    'settings.contentLangDesc': 'Приоритет глав и язык автоперевода',
     'settings.typography': 'Шрифт',
     'settings.iosBold': 'Жирный шрифт (iOS)',
     'settings.iosBoldDesc': 'Как «Жирный текст» в iOS — можно выключить',
@@ -291,7 +296,7 @@ const STRINGS = {
     'home.genres': 'Genres',
     'home.trending': 'Trending',
     'home.recent': 'Recent updates',
-    'home.apiError': 'MangaDex server is not responding — check your connection',
+    'home.apiError': 'MangaDex server is not responding — check connection and VPN',
     'home.loadError': 'Load error: {msg}',
     'home.retry': 'Retry',
     'browse.title': 'Browse',
@@ -337,6 +342,9 @@ const STRINGS = {
     'manga.pages': 'p.',
     'manga.langNotice': 'No readable chapters in «{lang}». Available: {langs}.',
     'manga.soloHint': 'Solo Leveling has no Russian scan on MangaDex — chapters in other languages are shown below.',
+    'manga.langActive': 'Chapter translation: {lang}. Page text is in this language.',
+    'manga.langFallback': 'No Russian chapters — showing {active} instead of {preferred}.',
+    'manga.langFallbackHint': 'Speech bubbles stay in the scan language, not Russian. Change content language in settings or pick a title with a Russian scan.',
     'manga.externalOnly': 'Chapters are only on external sites (Webnovel, MangaPlus, etc.) — cannot read them here.',
     'manga.noScans': 'No image scans on MangaDex for this title. Try another manga or the official site.',
     'manga.externalCount': 'External chapters: {n}',
@@ -379,15 +387,17 @@ const STRINGS = {
     'settings.tab.data': 'Data',
     'settings.notFound': 'Section not found',
     'settings.technical': 'Technical',
-    'settings.imageProxy': 'Image proxy',
-    'settings.imageProxyDesc': 'Stable page loading via dev server',
+    'settings.imageProxy': 'MangaDex proxy',
+    'settings.imageProxyDesc': 'Always on — API and images go through the server, no VPN needed',
     'settings.prefetch': 'Prefetch',
     'settings.prefetchDesc': 'Preload next pages and chapter',
     'settings.prefetchAhead': 'Pages ahead',
     'settings.uiLang': 'Interface language',
     'settings.uiLangDesc': 'Russian or English',
-    'settings.autoTranslate': 'Auto-translate to Russian',
-    'settings.autoTranslateDesc': 'Titles, descriptions, genres and chapters from MangaDex',
+    'settings.autoTranslate': 'Auto-translate content',
+    'settings.autoTranslateDesc': 'Translate titles, descriptions, genres and chapters to selected language',
+    'settings.contentLang': 'Content language',
+    'settings.contentLangDesc': 'Chapter priority and auto-translate target',
     'settings.typography': 'Typography',
     'settings.iosBold': 'Bold font (iOS)',
     'settings.iosBoldDesc': 'Like iOS Bold Text — toggle off anytime',
@@ -537,10 +547,11 @@ export function applyDocumentI18n() {
   const search = document.getElementById('search-input');
   if (search) search.placeholder = t('search.placeholder');
 
-  const hint = document.getElementById('user-auth-hint');
-  if (hint && !hint.dataset.userEmail) {
-    hint.textContent = t('auth.guest');
-  }
+  document.querySelectorAll('[data-user-hint]').forEach(hint => {
+    if (!hint.dataset.userEmail) {
+      hint.textContent = t('auth.guest');
+    }
+  });
 
   document.getElementById('reader-prev-chapter')?.replaceChildren(t('reader.prevChapter'));
   document.getElementById('reader-next-chapter')?.replaceChildren(t('reader.nextChapter'));

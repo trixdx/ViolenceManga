@@ -32,6 +32,6 @@ start "Violence API" cmd /k "cd /d %~dp0server && npm.cmd run dev"
 
 timeout /t 2 /nobreak >nul
 
-echo Starting frontend on http://localhost:5173 ...
+echo Starting frontend on https://localhost:5173 ...
 call npm.cmd run dev
 pause

@@ -4,23 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Violence — Manga Reader</title>
-  <meta name="theme-color" content="#7c3aed" />
+  <meta name="theme-color" content="#a855f7" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icon-192.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/icon-192.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/layout.css" />
   <link rel="stylesheet" href="./css/palettes.css" />
   <link rel="stylesheet" href="./css/effects.css" />
   <link rel="stylesheet" href="./css/components.css" />
   <link rel="stylesheet" href="./css/reader.css" />
 </head>
-<body>
+<body class="layout-dock">
   <div class="app-bg">
+    <div class="mesh-grid"></div>
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
@@ -29,7 +28,7 @@
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <aside class="sidebar" id="sidebar">
-    <div class="sidebar-brand" id="sidebar-brand" role="button" tabindex="0" aria-label="Violence — на главную">
+    <div class="sidebar-brand" data-home-brand role="button" tabindex="0" aria-label="Violence — на главную">
       <div class="brand-mark">
         <div class="brand-icon" aria-hidden="true">
           <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -79,11 +78,11 @@
       </button>
     </nav>
 
-    <div class="sidebar-user" id="sidebar-user">
-      <div class="avatar" id="user-avatar">G</div>
+    <div class="sidebar-user sidebar-user-trigger" id="sidebar-user-mobile">
+      <div class="avatar" data-user-avatar>G</div>
       <div class="user-info">
-        <strong id="user-name">Гость</strong>
-        <span id="user-auth-hint">Не авторизован</span>
+        <strong data-user-name>Гость</strong>
+        <span data-user-hint>Не авторизован</span>
       </div>
       <svg class="user-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
     </div>
@@ -92,37 +91,66 @@
   <div class="user-menu" id="user-menu"></div>
 
   <main class="main">
-    <header class="topbar">
-      <button class="menu-toggle" id="menu-toggle" aria-label="Меню">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    <header class="dock-header">
+      <button class="dock-brand" data-home-brand type="button" aria-label="Violence — на главную">
+        <span class="brand-title">Violence</span>
       </button>
 
-      <div class="topbar-title">
-        <nav class="breadcrumbs" id="breadcrumbs"></nav>
-        <h2 class="page-title" id="page-title">Главная</h2>
-      </div>
+      <nav class="dock-nav">
+        <button class="nav-item active" data-route="home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1V9.5z"/></svg>
+          <span data-i18n="nav.home">Главная</span>
+        </button>
+        <button class="nav-item" data-route="browse">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+          <span data-i18n="nav.browse">Каталог</span>
+        </button>
+        <button class="nav-item" data-route="library">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+          <span data-i18n="nav.library">Библиотека</span>
+        </button>
+        <button class="nav-item" data-route="profile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          <span data-i18n="nav.profile">Профиль</span>
+        </button>
+        <button class="nav-item" data-route="settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
+          <span data-i18n="nav.settings">Настройки</span>
+        </button>
+      </nav>
 
-      <div class="search-bar" id="search-bar">
+      <div class="dock-end">
+      <div class="search-bar dock-search" id="search-bar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
         <input type="search" id="search-input" placeholder="Поиск манги..." autocomplete="off" />
         <kbd>Ctrl K</kbd>
       </div>
 
-      <div class="topbar-actions">
-        <button class="icon-btn" id="theme-toggle" title="Тема">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a9 9 0 109 9c0-5-4-9-9-9z"/></svg>
+      <div class="dock-actions">
+        <button class="menu-toggle icon-btn" id="menu-toggle" aria-label="Меню">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <button class="icon-btn" id="theme-toggle" title="Тема" aria-label="Тема">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
         </button>
         <button class="icon-btn notification-btn" id="notif-btn" title="Уведомления">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
           <span class="badge" id="notif-badge" hidden>0</span>
         </button>
-        <button class="icon-btn" id="topbar-user" title="Аккаунт">
-          <div class="avatar avatar-sm" id="topbar-user-avatar">G</div>
-        </button>
+        <div class="dock-profile sidebar-user-trigger" id="sidebar-user">
+          <div class="avatar" data-user-avatar>G</div>
+          <div class="user-info">
+            <strong data-user-name>Гость</strong>
+            <span data-user-hint>Не авторизован</span>
+          </div>
+        </div>
+      </div>
       </div>
     </header>
 
-    <div class="content" id="content"></div>
+    <div class="page-shell">
+      <div class="content" id="content"></div>
+    </div>
   </main>
 
   <nav class="bottom-nav" id="bottom-nav">

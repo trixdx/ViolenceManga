@@ -1,7 +1,7 @@
 import { getState, updateSettings, clearNotifications } from './store.js';
 import { applyAllVisualSettings, animatePageEnter, showNotificationsPanel, updateSidebar } from './ui.js';
 import { navigate, parseHash, initRouter, setRouteHandler } from './router.js';
-import { initMenu, updateMenu, openUserMenuFromTopbar } from './menu.js';
+import { initMenu, updateMenu } from './menu.js';
 import { renderHome, renderSearch, renderGenre } from './pages/home.js';
 import { renderBrowse } from './pages/browse.js';
 import { renderMangaDetail } from './pages/manga.js';
@@ -111,8 +111,6 @@ function initTopbar() {
     updateSettings({ theme: newTheme });
     applyAllVisualSettings({ ...getState().settings, theme: newTheme });
   });
-
-  document.getElementById('topbar-user')?.addEventListener('click', openUserMenuFromTopbar);
 
   document.getElementById('notif-btn')?.addEventListener('click', () => {
     showNotificationsPanel();

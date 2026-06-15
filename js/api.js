@@ -1,15 +1,15 @@
 import { getState } from './store.js';
-import { wrapPageUrls } from './image-url.js';
+import { wrapPageUrls, resolveImageUrl } from './image-url.js';
 import {
   translateManga, translateMangaList, translateChapterList, translateTagName,
 } from './translate.js';
 
-const API_BASE = 'https://api.mangadex.org';
+const API_BASE = '/mangadex-api';
 const COVER_BASE = 'https://uploads.mangadex.org/covers';
 
 const cache = new Map();
 const CACHE_TTL = 5 * 60 * 1000;
-const CACHE_VERSION = 7;
+const CACHE_VERSION = 13;
 
 const LANG_NAMES = {
   ru: 'Русский', en: 'English', uk: 'Украинский', es: 'Испанский',
@@ -40,6 +40,11 @@ function getLangParams() {
   return [lang, fallback];
 }
 
+function getChapterLangPriority() {
+  const lang = getSettings().language || 'ru';
+  return lang === 'ru' ? ['ru', 'en'] : [lang, 'ru', 'en'];
+}
+
 function getContentRatingFilter() {
   if (getSettings().showNsfw) return null;
   return ['safe', 'suggestive'];
@@ -49,7 +54,7 @@ const API_TIMEOUT_MS = 20000;
 const API_RETRIES = 2;
 
 function buildUrl(path, params = {}) {
-  const url = new URL(`${API_BASE}${path}`);
+  const url = new URL(`${API_BASE}${path}`, location.origin);
   Object.entries(params).forEach(([k, v]) => {
     if (v === undefined || v === null) return;
     if (Array.isArray(v)) v.forEach(item => url.searchParams.append(k, item));
@@ -61,10 +66,10 @@ function buildUrl(path, params = {}) {
 function friendlyFetchError(err) {
   const msg = err?.message || '';
   if (msg.includes('timed out') || err?.name === 'TimeoutError') {
-    return new Error('Сервер MangaDex не отвечает — проверьте интернет и попробуйте снова');
+    return new Error('Сервер не отвечает — проверьте интернет и попробуйте позже');
   }
   if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-    return new Error('Нет соединения с MangaDex — проверьте интернет');
+    return new Error('Нет соединения с сервером — проверьте интернет');
   }
   return err instanceof Error ? err : new Error(String(err));
 }
@@ -129,16 +134,25 @@ function getTitle(manga) {
 function getDescription(manga) {
   const desc = manga.attributes.description;
   if (!desc) return '';
+  const lang = getSettings().language || 'ru';
+  if (desc[lang]) return desc[lang];
   if (desc.ru) return desc.ru;
   if (desc.en) return desc.en;
   const keys = Object.keys(desc);
   return keys.length ? desc[keys[0]] : '';
 }
 
+function getTagName(tag) {
+  const names = tag.attributes.name || {};
+  const lang = getSettings().language || 'ru';
+  return names[lang] || names.ru || names.en || Object.values(names)[0] || '';
+}
+
 function getCoverUrl(manga, size = 512) {
   const file = manga.relationships?.find(r => r.type === 'cover_art')?.attributes?.fileName;
   if (!file) return null;
-  return `${COVER_BASE}/${manga.id}/${file}.${size}.jpg`;
+  const direct = `${COVER_BASE}/${manga.id}/${file}.${size}.jpg`;
+  return resolveImageUrl(direct);
 }
 
 function getAuthors(manga) {
@@ -163,7 +177,7 @@ function mapManga(manga) {
       ?.filter(t => t.attributes.group === 'genre')
       .map(t => ({
         id: t.id,
-        name: t.attributes.name.en || t.attributes.name.ru || Object.values(t.attributes.name)[0],
+        name: getTagName(t),
       }))
       .slice(0, 8) || [],
     lastChapter: manga.attributes.lastChapter,
@@ -261,7 +275,7 @@ export async function getMangaById(id) {
 }
 
 function sortChapters(chapters) {
-  const sort = getSettings().chapterSort || 'desc';
+  const sort = getSettings().chapterSort || 'asc';
   return [...chapters].sort((a, b) => {
     const na = parseFloat(a.chapter) || 0;
     const nb = parseFloat(b.chapter) || 0;
@@ -270,19 +284,51 @@ function sortChapters(chapters) {
 }
 
 function langScore(language, prefs) {
-  if (language === prefs[0]) return 0;
-  if (language === prefs[1]) return 1;
-  const idx = Object.keys(LANG_NAMES).indexOf(language);
-  return idx >= 0 ? idx + 2 : 99;
+  const idx = prefs.indexOf(language);
+  if (idx >= 0) return idx;
+  const named = Object.keys(LANG_NAMES).indexOf(language);
+  return named >= 0 ? named + prefs.length : 99;
 }
 
-function preferLanguage(chapters) {
-  const prefs = getLangParams();
+/** One scanlation per chapter number — prefer configured languages, then newest upload. */
+function pickBestPerChapter(chapters) {
+  const prefs = getChapterLangPriority();
   const byChapter = {};
   chapters.forEach(ch => {
-    const key = ch.chapter || ch.id;
+    const key = String(ch.chapter ?? ch.id);
     const existing = byChapter[key];
-    if (!existing || langScore(ch.language, prefs) < langScore(existing.language, prefs)) {
+    if (!existing) {
+      byChapter[key] = ch;
+      return;
+    }
+    const scoreA = langScore(ch.language, prefs);
+    const scoreB = langScore(existing.language, prefs);
+    if (scoreA < scoreB) {
+      byChapter[key] = ch;
+      return;
+    }
+    if (scoreA > scoreB) return;
+    const chTime = Date.parse(ch.publishAt || 0) || 0;
+    const exTime = Date.parse(existing.publishAt || 0) || 0;
+    if (chTime > exTime || (chTime === exTime && ch.pages > existing.pages)) {
+      byChapter[key] = ch;
+    }
+  });
+  return Object.values(byChapter);
+}
+
+function dedupeSameLanguage(chapters) {
+  const byChapter = {};
+  chapters.forEach(ch => {
+    const key = String(ch.chapter ?? ch.id);
+    const existing = byChapter[key];
+    if (!existing) {
+      byChapter[key] = ch;
+      return;
+    }
+    const chTime = Date.parse(ch.publishAt || 0) || 0;
+    const exTime = Date.parse(existing.publishAt || 0) || 0;
+    if (chTime > exTime || (chTime === exTime && ch.pages > existing.pages)) {
       byChapter[key] = ch;
     }
   });
@@ -310,13 +356,65 @@ function mapChapter(ch) {
   };
 }
 
-async function fetchChapterFeed(mangaId, limit, offset) {
-  return fetchAPI(`/manga/${mangaId}/feed`, {
+async function fetchChapterFeed(mangaId, { limit = 100, offset = 0, order = 'asc', languages = null } = {}) {
+  const params = {
     limit,
     offset,
-    'order[chapter]': 'desc',
+    'order[chapter]': order,
     'includes[]': ['scanlation_group'],
-  });
+  };
+  if (languages?.length) params['translatedLanguage[]'] = languages;
+  return fetchAPI(`/manga/${mangaId}/feed`, params);
+}
+
+async function fetchAllPages(mangaId, pageSize, language) {
+  let offset = 0;
+  let feedTotal = Infinity;
+  const allReadable = [];
+  const allExternal = [];
+
+  while (offset < feedTotal) {
+    const data = await fetchChapterFeed(mangaId, {
+      limit: pageSize,
+      offset,
+      order: 'asc',
+      languages: language ? [language] : null,
+    });
+    feedTotal = data.total;
+    allReadable.push(...extractReadableChapters(data));
+    allExternal.push(...extractExternalChapters(data));
+    offset += data.limit;
+    if (!data.data.length) break;
+  }
+
+  return { readable: allReadable, external: allExternal, feedTotal };
+}
+
+async function fetchAllReadableChapters(mangaId, pageSize = 100) {
+  const preferredLang = getSettings().language || 'ru';
+  const langChain = getChapterLangPriority();
+
+  for (const lang of langChain) {
+    const batch = await fetchAllPages(mangaId, pageSize, lang);
+    if (batch.readable.length > 0) {
+      return {
+        ...batch,
+        activeLanguage: lang,
+        preferredLang,
+        usedFallback: lang !== preferredLang,
+        noPreferredLang: lang !== preferredLang && lang !== 'en',
+      };
+    }
+  }
+
+  const any = await fetchAllPages(mangaId, pageSize, null);
+  return {
+    ...any,
+    activeLanguage: null,
+    preferredLang,
+    usedFallback: true,
+    noPreferredLang: true,
+  };
 }
 
 function extractReadableChapters(data) {
@@ -327,62 +425,28 @@ function extractExternalChapters(data) {
   return data.data.map(mapChapter).filter(ch => !ch.readable && ch.externalUrl);
 }
 
-async function fetchAllReadableChapters(mangaId, pageSize = 100) {
-  const data = await fetchChapterFeed(mangaId, pageSize, 0);
-  const allReadable = extractReadableChapters(data);
-  const allExternal = extractExternalChapters(data);
-
-  if (data.total > data.limit && allReadable.length === 0) {
-    let offset = data.limit;
-    while (offset < data.total) {
-      const more = await fetchChapterFeed(mangaId, pageSize, offset);
-      allReadable.push(...extractReadableChapters(more));
-      allExternal.push(...extractExternalChapters(more));
-      offset += more.limit;
-      if (more.data.length === 0) break;
-    }
-  }
-
-  return { readable: allReadable, external: allExternal, total: data.total };
-}
-
-export async function getChapters(mangaId, limit = 100, offset = 0) {
+export async function getChapters(mangaId, limit = 500, offset = 0) {
   const preferredLang = getSettings().language || 'ru';
 
-  if (offset === 0) {
-    const { readable, external, total } = await fetchAllReadableChapters(mangaId, Math.max(limit, 100));
-    const chapters = sortChapters(preferLanguage(readable));
-    const availableLanguages = [...new Set(readable.map(ch => ch.language))].sort();
-    const hasPreferred = readable.some(ch => ch.language === preferredLang);
-
-    const sliced = chapters.slice(0, limit);
-    return {
-      chapters: await translateChapterList(sliced),
-      total,
-      readableCount: chapters.length,
-      hasExternalOnly: chapters.length === 0 && external.length > 0,
-      externalCount: external.length,
-      availableLanguages,
-      noPreferredLang: chapters.length > 0 && !hasPreferred,
-      preferredLang,
-      offset: 0,
-      limit,
-      allLoaded: chapters.length <= limit,
-    };
-  }
-
-  const { readable, external, total } = await fetchAllReadableChapters(mangaId, 100);
-  const chapters = sortChapters(preferLanguage(readable));
+  const fetched = await fetchAllReadableChapters(mangaId, 100);
+  const normalized = fetched.activeLanguage
+    ? dedupeSameLanguage(fetched.readable)
+    : pickBestPerChapter(fetched.readable);
+  const chapters = sortChapters(normalized);
+  const availableLanguages = [...new Set(fetched.readable.map(ch => ch.language))].sort();
+  const hasPreferred = chapters.some(ch => ch.language === preferredLang);
 
   const sliced = chapters.slice(offset, offset + limit);
   return {
-    chapters: await translateChapterList(sliced),
-    total,
+    chapters: await translateChapterList(sliced, mangaId),
+    total: chapters.length,
     readableCount: chapters.length,
-    hasExternalOnly: chapters.length === 0 && external.length > 0,
-    externalCount: external.length,
-    availableLanguages: [...new Set(readable.map(ch => ch.language))].sort(),
-    noPreferredLang: chapters.length > 0 && !readable.some(ch => ch.language === preferredLang),
+    hasExternalOnly: chapters.length === 0 && fetched.external.length > 0,
+    externalCount: fetched.external.length,
+    availableLanguages,
+    activeLanguage: fetched.activeLanguage,
+    usedFallback: fetched.usedFallback,
+    noPreferredLang: fetched.noPreferredLang || (chapters.length > 0 && !hasPreferred),
     preferredLang,
     offset,
     limit,
