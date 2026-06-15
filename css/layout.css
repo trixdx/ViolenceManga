@@ -154,22 +154,39 @@ body.layout-dock .dock-actions .menu-toggle {
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: 12px;
+  position: relative;
+}
+
+body.layout-dock .dock-profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+body.layout-dock .dock-profile .avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 0.78rem;
+  border-width: 1px;
+  box-shadow: none;
 }
 
 body.layout-dock .menu-toggle {
   display: none !important;
 }
 
-body.layout-dock .dock-profile {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 12px 6px 6px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-  cursor: pointer;
-  transition: border-color var(--transition), background var(--transition);
+body.layout-dock .dock-profile .user-info {
+  display: none;
 }
 
 body.layout-dock .dock-profile:hover {
@@ -790,12 +807,23 @@ body.layout-dock .orb-2 {
   }
 
   body.layout-dock .dock-profile {
-    padding: 4px 8px 4px 4px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    gap: 0;
+  }
+
+  body.layout-dock .dock-profile .avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  body.layout-dock .dock-actions {
     gap: 6px;
   }
 
-  body.layout-dock .dock-profile .user-info {
-    display: none;
+  body.layout-dock .dock-end {
+    gap: 6px;
   }
 
   body.layout-dock .page-shell {

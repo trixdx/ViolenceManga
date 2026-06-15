@@ -1,5 +1,5 @@
 import { searchManga, searchByTag, getTrending, getRecent, POPULAR_GENRES } from '../api.js';
-import { getState, isFavorite, incrementStat } from '../store.js';
+import { getState, isFavorite, incrementStat, getContinueReading } from '../store.js';
 import {
   renderMangaGrid, showLoading, bindMangaCards, bindMangaTiles,
   bindFavButtons, showToast, bindContinueCards, escapeHtml, placeholderCover,
