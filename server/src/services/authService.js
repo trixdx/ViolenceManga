@@ -1,5 +1,5 @@
 import { sql, getPool } from '../db.js';
-import { hashPassword, newUserId, newSalt, initUserRows, saveState } from './stateService.js';
+import { hashPassword, newUserId, newSalt, initUserRows, saveState, loadState } from './stateService.js';
 
 function normalizeLogin(login) {
   return login.trim().toLowerCase();
@@ -75,14 +75,42 @@ export async function registerUser({ login, email, password, guestState }) {
   return findUserById(userId);
 }
 
-export async function loginUser(identifier, password) {
+export async function loginUser(identifier, password, guestState) {
   const user = await findUserByLoginOrEmail(identifier);
   if (!user) throw new Error('Пользователь не найден');
 
   const hash = hashPassword(password, user.Salt);
   if (hash !== user.PasswordHash) throw new Error('Неверный пароль');
 
+  if (guestState && typeof guestState === 'object') {
+    const existing = await loadState(user.UserId);
+    if (existing) {
+      const merged = mergeGuestState(existing, guestState);
+      await saveState(user.UserId, merged);
+    }
+  }
+
   return findUserById(user.UserId);
+}
+
+function mergeGuestState(server, guest) {
+  return {
+    ...guest,
+    ...server,
+    profile: { ...guest.profile, ...server.profile, name: server.profile?.name || guest.profile?.name },
+    favorites: server.favorites?.length ? server.favorites : guest.favorites,
+    bookmarks: Object.keys(server.bookmarks || {}).length ? server.bookmarks : guest.bookmarks,
+    readChapters: [...new Set([...(server.readChapters || []), ...(guest.readChapters || [])])],
+    history: server.history?.length ? server.history : guest.history,
+    stats: { ...guest.stats, ...server.stats },
+    lists: {
+      reading: (server.lists?.reading?.length ? server.lists.reading : guest.lists?.reading) || [],
+      plan: (server.lists?.plan?.length ? server.lists.plan : guest.lists?.plan) || [],
+      completed: (server.lists?.completed?.length ? server.lists.completed : guest.lists?.completed) || [],
+      dropped: (server.lists?.dropped?.length ? server.lists.dropped : guest.lists?.dropped) || [],
+    },
+    settings: { ...guest.settings, ...server.settings },
+  };
 }
 
 export function publicUser(row) {

@@ -82,7 +82,8 @@ export async function register({ login, email, password, passwordConfirm }) {
 
 export async function login({ identifier, password }) {
   if (isServerMode()) {
-    const { user } = await apiLogin({ identifier, password });
+    const guestState = exportCurrentState();
+    const { user } = await apiLogin({ identifier, password, guestState });
     currentUser = user;
     await initStoreFromSession(user.id);
     updateProfile({ name: user.displayName || user.login });
@@ -174,9 +175,29 @@ async function loginLocal({ identifier, password }) {
   if (!user) throw new Error('Пользователь не найден');
   const hash = await hashPassword(password, user.salt);
   if (hash !== user.passwordHash) throw new Error('Неверный пароль');
+  const guestData = exportCurrentState();
   setLocalSession(user.id);
   currentUser = user;
   initStoreFromSession(user.id);
+  importState(mergeGuestIntoSaved(guestData, getState()));
   updateProfile({ name: user.displayName || user.login });
   return user;
+}
+
+function mergeGuestIntoSaved(guest, saved) {
+  if (!guest) return saved;
+  return {
+    ...saved,
+    favorites: saved.favorites?.length ? saved.favorites : guest.favorites,
+    bookmarks: Object.keys(saved.bookmarks || {}).length ? saved.bookmarks : guest.bookmarks,
+    readChapters: [...new Set([...(saved.readChapters || []), ...(guest.readChapters || [])])],
+    history: saved.history?.length ? saved.history : guest.history,
+    stats: { ...guest.stats, ...saved.stats },
+  lists: {
+    reading: (saved.lists?.reading?.length ? saved.lists.reading : guest.lists?.reading) || [],
+    plan: (saved.lists?.plan?.length ? saved.lists.plan : guest.lists?.plan) || [],
+    completed: (saved.lists?.completed?.length ? saved.lists.completed : guest.lists?.completed) || [],
+    dropped: (saved.lists?.dropped?.length ? saved.lists.dropped : guest.lists?.dropped) || [],
+  },
+  };
 }

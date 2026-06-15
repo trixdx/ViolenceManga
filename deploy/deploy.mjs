@@ -101,7 +101,14 @@ function uploadAndDeploy() {
 }
 
 buildArchive();
-uploadAndDeploy().catch(err => {
+uploadAndDeploy()
+  .then(() => {
+    try {
+      rmSync(join(ROOT, '.deploy-stage'), { recursive: true, force: true });
+      rmSync(ARCHIVE, { force: true });
+    } catch { /* ignore */ }
+  })
+  .catch(err => {
   console.error('\nDeploy failed:', err.message);
   process.exit(1);
 });

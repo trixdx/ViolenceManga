@@ -19,9 +19,9 @@ app.use(cookieParser());
 app.get('/api/health', async (_req, res) => {
   try {
     const db = await pingDb();
-    res.json({ ok: true, db, server: config.db.server, database: config.db.database });
-  } catch (err) {
-    res.status(503).json({ ok: false, error: err.message });
+    res.json({ ok: true, db: !!db });
+  } catch {
+    res.status(503).json({ ok: false, db: false });
   }
 });
 
@@ -35,6 +35,9 @@ app.use((err, _req, res, _next) => {
 });
 
 app.listen(config.port, () => {
+  if (process.env.NODE_ENV === 'production' && config.jwtSecret === 'dev-secret') {
+    console.error('JWT_SECRET must be set in production');
+    process.exit(1);
+  }
   console.log(`Violence API → http://localhost:${config.port}`);
-  console.log(`MSSQL → ${config.db.server} / ${config.db.database}`);
 });

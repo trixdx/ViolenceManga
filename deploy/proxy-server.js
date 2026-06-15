@@ -9,6 +9,23 @@ const MANGADEX_API = 'https://api.mangadex.org';
 
 const app = express();
 app.set('query parser', 'extended');
+app.set('trust proxy', 1);
+
+const rateBuckets = new Map();
+function rateLimit(max = 120, windowMs = 60000) {
+  return (req, res, next) => {
+    const ip = req.ip || 'local';
+    const now = Date.now();
+    let bucket = rateBuckets.get(ip);
+    if (!bucket || now - bucket.start > windowMs) bucket = { start: now, count: 0 };
+    bucket.count += 1;
+    rateBuckets.set(ip, bucket);
+    if (bucket.count > max) return res.status(429).json({ error: 'Too many requests' });
+    next();
+  };
+}
+
+app.use(rateLimit());
 
 function isMangadexImageUrl(url) {
   try {
@@ -19,7 +36,7 @@ function isMangadexImageUrl(url) {
       || hostname === 'mangadex.network'
       || hostname.endsWith('.mangadex.org');
   } catch {
-    return /mangadex\.(org|network)/i.test(url || '');
+    return false;
   }
 }
 

@@ -30,19 +30,32 @@ function normalizeQuery(query) {
   return query.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+const chaptersCache = new Map();
+const CHAPTERS_CACHE_TTL = 5 * 60 * 1000;
+
+function chaptersCacheKey(mangaId) {
+  const s = getSettings();
+  return `${mangaId}:${s.language || 'ru'}:${s.chapterSort || 'asc'}`;
+}
+
+export function invalidateChapterCache(mangaId) {
+  for (const key of chaptersCache.keys()) {
+    if (key.startsWith(`${mangaId}:`)) chaptersCache.delete(key);
+  }
+}
+
+export function invalidateAllChapterCache() {
+  chaptersCache.clear();
+}
+
 function getSettings() {
   return getState().settings;
 }
 
-function getLangParams() {
-  const lang = getSettings().language || 'ru';
-  const fallback = lang === 'ru' ? 'en' : 'ru';
-  return [lang, fallback];
-}
-
 function getChapterLangPriority() {
   const lang = getSettings().language || 'ru';
-  return lang === 'ru' ? ['ru', 'en'] : [lang, 'ru', 'en'];
+  const chain = [lang, 'ru', 'en'];
+  return [...new Set(chain.filter(Boolean))];
 }
 
 function getContentRatingFilter() {
@@ -427,30 +440,43 @@ function extractExternalChapters(data) {
 
 export async function getChapters(mangaId, limit = 500, offset = 0) {
   const preferredLang = getSettings().language || 'ru';
+  const cacheKey = chaptersCacheKey(mangaId);
+  let bundle = chaptersCache.get(cacheKey);
+  const stale = !bundle || Date.now() - bundle.at > CHAPTERS_CACHE_TTL;
 
-  const fetched = await fetchAllReadableChapters(mangaId, 100);
-  const normalized = fetched.activeLanguage
-    ? dedupeSameLanguage(fetched.readable)
-    : pickBestPerChapter(fetched.readable);
-  const chapters = sortChapters(normalized);
-  const availableLanguages = [...new Set(fetched.readable.map(ch => ch.language))].sort();
-  const hasPreferred = chapters.some(ch => ch.language === preferredLang);
+  if (stale) {
+    const fetched = await fetchAllReadableChapters(mangaId, 100);
+    const normalized = fetched.activeLanguage
+      ? dedupeSameLanguage(fetched.readable)
+      : pickBestPerChapter(fetched.readable);
+    const chapters = sortChapters(normalized);
+    const availableLanguages = [...new Set(fetched.readable.map(ch => ch.language))].sort();
+    const hasPreferred = chapters.some(ch => ch.language === preferredLang);
+    bundle = {
+      at: Date.now(),
+      chapters,
+      meta: {
+        total: chapters.length,
+        readableCount: chapters.length,
+        hasExternalOnly: chapters.length === 0 && fetched.external.length > 0,
+        externalCount: fetched.external.length,
+        availableLanguages,
+        activeLanguage: fetched.activeLanguage,
+        usedFallback: fetched.usedFallback,
+        noPreferredLang: fetched.noPreferredLang || (chapters.length > 0 && !hasPreferred),
+        preferredLang,
+      },
+    };
+    chaptersCache.set(cacheKey, bundle);
+  }
 
-  const sliced = chapters.slice(offset, offset + limit);
+  const sliced = bundle.chapters.slice(offset, offset + limit);
   return {
     chapters: await translateChapterList(sliced, mangaId),
-    total: chapters.length,
-    readableCount: chapters.length,
-    hasExternalOnly: chapters.length === 0 && fetched.external.length > 0,
-    externalCount: fetched.external.length,
-    availableLanguages,
-    activeLanguage: fetched.activeLanguage,
-    usedFallback: fetched.usedFallback,
-    noPreferredLang: fetched.noPreferredLang || (chapters.length > 0 && !hasPreferred),
-    preferredLang,
+    ...bundle.meta,
     offset,
     limit,
-    allLoaded: offset + limit >= chapters.length,
+    allLoaded: offset + limit >= bundle.chapters.length,
   };
 }
 

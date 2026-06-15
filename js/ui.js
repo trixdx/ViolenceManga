@@ -1,8 +1,10 @@
-import { getState } from './store.js';
+import { getState, isFavorite, addFavorite, removeFavorite } from './store.js';
 import { isLoggedIn, getCurrentUser } from './auth.js';
 import { applyAvatarEl, refreshAllAvatars } from './avatars.js';
 import { t } from './i18n.js';
 import { resolveImageUrl } from './image-url.js';
+import { getChapters } from './api.js';
+import { checkAchievements } from './achievements.js';
 
 export function showToast(message, type = 'info') {
   const container = document.getElementById('toast-container');
@@ -196,10 +198,53 @@ export function renderContinueSection(items, navigate) {
   `;
 }
 
-export function bindContinueCards(container, navigate) {
+export function bindContinueCards(container, navigate, openReader) {
   container.querySelectorAll('.continue-card').forEach(card => {
-    card.addEventListener('click', () => navigate('manga', { id: card.dataset.mangaId }));
+    card.addEventListener('click', async () => {
+      const mangaId = card.dataset.mangaId;
+      const chapterId = card.dataset.chapterId;
+      if (!openReader || !chapterId) {
+        navigate('manga', { id: mangaId });
+        return;
+      }
+      try {
+        const { chapters } = await getChapters(mangaId, 500, 0);
+        const ch = chapters.find(c => c.id === chapterId);
+        if (!ch) {
+          navigate('manga', { id: mangaId });
+          return;
+        }
+        const pageIndex = parseInt(card.dataset.pageIndex || '0', 10);
+        openReader(mangaId, card.dataset.mangaTitle || t('common.manga'), ch, {
+          chapters,
+          cover: card.dataset.cover || '',
+          startPage: pageIndex,
+        });
+      } catch {
+        navigate('manga', { id: mangaId });
+      }
+    });
   });
+}
+
+export function toggleFavCard(mangaId) {
+  const card = document.querySelector(`[data-manga-id="${mangaId}"]`);
+  const btn = card?.querySelector('.manga-card-fav');
+
+  if (isFavorite(mangaId)) {
+    removeFavorite(mangaId);
+    btn?.classList.remove('active');
+    btn?.querySelector('svg')?.setAttribute('fill', 'none');
+    showToast(t('toast.favRemove'));
+  } else {
+    const title = card?.querySelector('h3')?.textContent || '';
+    const cover = card?.querySelector('img')?.src || '';
+    addFavorite({ id: mangaId, title, cover });
+    btn?.classList.add('active');
+    btn?.querySelector('svg')?.setAttribute('fill', 'currentColor');
+    showToast(t('toast.favAdd'), 'success');
+    checkAchievements();
+  }
 }
 
 export function updateSidebar() {
@@ -208,8 +253,8 @@ export function updateSidebar() {
     el.textContent = state.profile.name;
   });
   const hintText = isLoggedIn()
-    ? (getCurrentUser()?.email || `Ур. ${state.profile.level}`)
-    : `Ур. ${state.profile.level} · Гость`;
+    ? (getCurrentUser()?.email || t('auth.level', { level: state.profile.level }))
+    : t('auth.guestLevel', { level: state.profile.level });
   document.querySelectorAll('[data-user-hint]').forEach(el => {
     el.textContent = hintText;
   });

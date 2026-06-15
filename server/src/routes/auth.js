@@ -25,11 +25,11 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
-    const { identifier, password } = req.body || {};
+    const { identifier, password, guestState } = req.body || {};
     if (!identifier?.trim()) return res.status(400).json({ error: 'Введите логин или email' });
     if (!password) return res.status(400).json({ error: 'Введите пароль' });
 
-    const user = await loginUser(identifier, password);
+    const user = await loginUser(identifier, password, guestState);
     setAuthCookie(res, user.UserId);
     res.json({ user: publicUser(user) });
   } catch (err) {

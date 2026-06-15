@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 export const config = {
-  port: parseInt(process.env.PORT || '3001', 10),
+  port: parseInt(process.env.PORT || '3002', 10),
   jwtSecret: process.env.JWT_SECRET || 'dev-secret',
   corsOrigin: process.env.CORS_ORIGIN || 'https://localhost:5173',
   cookieSecure: process.env.COOKIE_SECURE !== 'false',

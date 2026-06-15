@@ -1,10 +1,16 @@
 import https from 'node:https';
 import http from 'node:http';
 
-const ALLOWED = /(\.mangadex\.network\/|uploads\.mangadex\.org\/)/;
-
 export function isAllowedImageUrl(url) {
-  return ALLOWED.test(url);
+  try {
+    const { hostname, protocol } = new URL(url);
+    if (protocol !== 'http:' && protocol !== 'https:') return false;
+    return hostname === 'uploads.mangadex.org'
+      || hostname.endsWith('.mangadex.network')
+      || hostname === 'mangadex.network';
+  } catch {
+    return false;
+  }
 }
 
 export function proxyHeaders() {

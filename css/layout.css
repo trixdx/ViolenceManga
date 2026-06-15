@@ -773,3 +773,166 @@ body.layout-dock .orb-2 {
 [data-theme="light"] .search-bar input {
   color: var(--text-primary);
 }
+
+/* ── Mobile UX ── */
+@media (max-width: 640px) {
+  body.layout-dock {
+    --dock-height: 56px;
+  }
+
+  body.layout-dock .dock-header {
+    padding: 0 10px;
+    gap: 8px;
+  }
+
+  body.layout-dock .dock-brand .brand-title {
+    font-size: 1.1rem;
+  }
+
+  body.layout-dock .dock-profile {
+    padding: 4px 8px 4px 4px;
+    gap: 6px;
+  }
+
+  body.layout-dock .dock-profile .user-info {
+    display: none;
+  }
+
+  body.layout-dock .page-shell {
+    padding: 0 12px calc(88px + env(safe-area-inset-bottom));
+  }
+
+  body.layout-dock .content {
+    padding: 16px 0 0;
+  }
+
+  .dashboard-hero-main {
+    padding: 24px 18px;
+    border-radius: 20px;
+  }
+
+  .dashboard-hero-main h1 {
+    font-size: 1.45rem;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .dash-stat-card,
+  .stat-card {
+    min-height: 96px;
+    padding: 16px 14px;
+  }
+
+  .dash-stat-wide {
+    grid-column: span 2;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .dash-stat-note {
+    text-align: left !important;
+  }
+
+  .manga-detail {
+    gap: 16px;
+  }
+
+  .manga-detail-cover {
+    max-width: 180px;
+  }
+
+  .manga-detail-info h1 {
+    font-size: 1.35rem;
+  }
+
+  .manga-actions {
+    flex-direction: column;
+  }
+
+  .manga-actions .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .list-buttons {
+    gap: 6px;
+  }
+
+  .list-buttons .btn {
+    flex: 1 1 calc(50% - 6px);
+    min-height: 40px;
+  }
+
+  .chapter-item {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 8px;
+    padding: 14px 12px !important;
+    min-height: 48px;
+  }
+
+  .chapter-item-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .chapter-offline-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .continue-rail .continue-card {
+    flex: 0 0 min(100%, 280px);
+  }
+
+  .manga-rail {
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .manga-tile {
+    flex: 0 0 120px;
+  }
+
+  .genre-chip {
+    padding: 12px 16px;
+    font-size: 0.88rem;
+  }
+
+  .settings-nav {
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .settings-nav .tab-btn {
+    flex-shrink: 0;
+    min-height: 40px;
+  }
+
+  .setting-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 10px;
+  }
+
+  body.layout-dock .bottom-nav {
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  }
+
+  body.layout-dock .bottom-nav-item {
+    font-size: 0.68rem;
+    gap: 2px;
+    min-height: 52px;
+  }
+
+  body.layout-dock .bottom-nav-item svg {
+    width: 22px;
+    height: 22px;
+  }
+}

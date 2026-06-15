@@ -58,23 +58,25 @@ export function parseHash() {
   return { route: route || 'home', params: {} };
 }
 
+let skipNextHashChange = false;
+
 export function navigate(route, params = {}) {
   currentRoute = route;
   currentParams = params;
   const hash = buildHash(route, params);
-  if (location.hash !== hash) history.pushState(null, '', hash);
+  if (location.hash !== hash) {
+    skipNextHashChange = true;
+    history.pushState(null, '', hash);
+  }
   onRouteChange?.(route, params);
 }
 
 export function initRouter() {
   window.addEventListener('hashchange', () => {
-    const { route, params } = parseHash();
-    currentRoute = route;
-    currentParams = params;
-    onRouteChange?.(route, params);
-  });
-
-  window.addEventListener('popstate', () => {
+    if (skipNextHashChange) {
+      skipNextHashChange = false;
+      return;
+    }
     const { route, params } = parseHash();
     currentRoute = route;
     currentParams = params;

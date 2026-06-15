@@ -1,13 +1,15 @@
 import { searchManga, searchByTag, getTrending, getRecent, POPULAR_GENRES } from '../api.js';
-import { getState, getContinueReading, isFavorite, addFavorite, removeFavorite, incrementStat } from '../store.js';
+import { getState, isFavorite, incrementStat } from '../store.js';
 import {
   renderMangaGrid, showLoading, bindMangaCards, bindMangaTiles,
   bindFavButtons, showToast, bindContinueCards, escapeHtml, placeholderCover,
+  toggleFavCard,
 } from '../ui.js';
 import { checkAchievements } from '../achievements.js';
 import { t } from '../i18n.js';
 import { translateGenre } from '../translate.js';
 import { resolveImageUrl } from '../image-url.js';
+import { openReader } from '../reader.js';
 
 const cardOpts = () => ({ showFav: true, isFavorite: (id) => isFavorite(id) });
 
@@ -37,7 +39,7 @@ export async function renderHome(container, navigate) {
           <p>${t('home.subtitle')}</p>
           <button type="button" class="hero-search-hint" id="hero-search-focus">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
-            Найти мангу… <kbd>Ctrl K</kbd>
+            ${t('home.searchHint')} <kbd>Ctrl K</kbd>
           </button>
         </div>
         <div class="dashboard-stats">
@@ -55,10 +57,10 @@ export async function renderHome(container, navigate) {
           </div>
           <div class="dash-stat-card dash-stat-wide">
             <div>
-              <strong class="dash-stat-value dash-stat-level">Ур. ${state.profile.level}</strong>
+              <strong class="dash-stat-value dash-stat-level">${t('auth.level', { level: state.profile.level })}</strong>
               <span>${state.profile.xp} XP</span>
             </div>
-            <span class="dash-stat-note">${state.stats.chaptersRead} глав прочитано</span>
+            <span class="dash-stat-note">${t('home.chaptersReadStat', { n: state.stats.chaptersRead })}</span>
           </div>
         </div>
       </div>
@@ -67,7 +69,7 @@ export async function renderHome(container, navigate) {
         <div class="section-head"><h3>${t('continue.title')}</h3></div>
         <div class="manga-rail continue-rail">
           ${continueItems.map(item => `
-            <div class="continue-card" data-manga-id="${item.mangaId}">
+            <div class="continue-card" data-manga-id="${item.mangaId}" data-chapter-id="${item.chapterId || ''}" data-manga-title="${escapeHtml(item.mangaTitle || '')}" data-chapter-title="${escapeHtml(item.chapterTitle || '')}" data-cover="${escapeHtml(item.cover || '')}" data-page-index="${item.pageIndex || 0}">
               <img src="${resolveImageUrl(item.cover) || placeholderCover(item.mangaTitle, 80, 110)}" alt="" />
               <div class="continue-info">
                 <h4>${escapeHtml(item.mangaTitle || t('common.manga'))}</h4>
@@ -105,8 +107,8 @@ export async function renderHome(container, navigate) {
 
     bindMangaCards(container, (id) => navigate('manga', { id }));
     bindMangaTiles(container, (id) => navigate('manga', { id }));
-    bindFavButtons(container, (id) => toggleFav(id));
-    bindContinueCards(container, navigate);
+    bindFavButtons(container, toggleFavCard);
+    bindContinueCards(container, navigate, openReader);
     container.querySelectorAll('.genre-chip[data-tag]').forEach(tag => {
       tag.addEventListener('click', () => navigate('genre', { tag: tag.dataset.tag }));
     });
@@ -118,7 +120,7 @@ export async function renderHome(container, navigate) {
 
 export async function renderSearch(container, query, navigate, offset = 0) {
   if (offset === 0) showLoading(container);
-  incrementStat('searchCount');
+  if (offset === 0) incrementStat('searchCount');
 
   try {
     const { results, total } = await searchManga(query, 24, offset);
@@ -148,11 +150,12 @@ export async function renderSearch(container, query, navigate, offset = 0) {
     }
 
     bindMangaCards(container, (id) => navigate('manga', { id }));
-    bindFavButtons(container, (id) => toggleFav(id));
+    bindFavButtons(container, toggleFavCard);
 
-    container.querySelector('#search-more')?.addEventListener('click', () => {
-      renderSearch(container, query, navigate, offset + 24);
-    });
+    const moreBtn = container.querySelector('#search-more');
+    if (moreBtn) {
+      moreBtn.onclick = () => renderSearch(container, query, navigate, offset + 24);
+    }
   } catch (err) {
     container.innerHTML = `<div class="empty-state"><p>${t('empty.error', { msg: err.message })}</p><button class="btn btn-primary" id="retry-search">${t('common.retry')}</button></div>`;
     document.getElementById('retry-search')?.addEventListener('click', () => renderSearch(container, query, navigate));
@@ -185,31 +188,12 @@ export async function renderGenre(container, tagName, navigate, offset = 0) {
     }
 
     bindMangaCards(container, (id) => navigate('manga', { id }));
-    bindFavButtons(container, (id) => toggleFav(id));
-    container.querySelector('#genre-more')?.addEventListener('click', () => {
-      renderGenre(container, tagName, navigate, offset + 24);
-    });
+    bindFavButtons(container, toggleFavCard);
+    const genreMore = container.querySelector('#genre-more');
+    if (genreMore) {
+      genreMore.onclick = () => renderGenre(container, tagName, navigate, offset + 24);
+    }
   } catch (err) {
-    container.innerHTML = `<div class="empty-state"><p>Ошибка: ${err.message}</p></div>`;
-  }
-}
-
-function toggleFav(mangaId) {
-  const card = document.querySelector(`[data-manga-id="${mangaId}"]`);
-  const btn = card?.querySelector('.manga-card-fav');
-
-  if (isFavorite(mangaId)) {
-    removeFavorite(mangaId);
-    btn?.classList.remove('active');
-    btn?.querySelector('svg')?.setAttribute('fill', 'none');
-    showToast(t('toast.favRemove'));
-  } else {
-    const title = card?.querySelector('h3')?.textContent || '';
-    const cover = card?.querySelector('img')?.src || '';
-    addFavorite({ id: mangaId, title, cover });
-    btn?.classList.add('active');
-    btn?.querySelector('svg')?.setAttribute('fill', 'currentColor');
-    showToast(t('toast.favAdd'), 'success');
-    checkAchievements();
+    container.innerHTML = `<div class="empty-state"><p>${t('empty.error', { msg: err.message })}</p></div>`;
   }
 }

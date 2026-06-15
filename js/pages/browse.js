@@ -1,6 +1,6 @@
 import { getTrending, getRecent, POPULAR_GENRES } from '../api.js';
-import { isFavorite, addFavorite, removeFavorite } from '../store.js';
-import { renderMangaGrid, showLoading, bindMangaCards, bindFavButtons, showToast } from '../ui.js';
+import { isFavorite } from '../store.js';
+import { renderMangaGrid, showLoading, bindMangaCards, bindFavButtons, showToast, toggleFavCard } from '../ui.js';
 import { checkAchievements } from '../achievements.js';
 import { t } from '../i18n.js';
 import { translateGenre } from '../translate.js';
@@ -51,33 +51,12 @@ export async function renderBrowse(container, navigate) {
     `;
 
     bindMangaCards(container, (id) => navigate('manga', { id }));
-    bindFavButtons(container, toggleFav);
+    bindFavButtons(container, toggleFavCard);
     container.querySelectorAll('.genre-chip[data-tag]').forEach(tag => {
       tag.addEventListener('click', () => navigate('genre', { tag: tag.dataset.tag }));
     });
   } catch (err) {
     container.innerHTML = `<div class="empty-state"><p>${t('empty.error', { msg: err.message })}</p><button class="btn btn-primary" id="retry-browse">${t('common.retry')}</button></div>`;
     document.getElementById('retry-browse')?.addEventListener('click', () => renderBrowse(container, navigate));
-  }
-}
-
-function toggleFav(mangaId) {
-  const card = document.querySelector(`[data-manga-id="${mangaId}"]`);
-  const btn = card?.querySelector('.manga-card-fav');
-  if (isFavorite(mangaId)) {
-    removeFavorite(mangaId);
-    btn?.classList.remove('active');
-    btn?.querySelector('svg')?.setAttribute('fill', 'none');
-    showToast('Удалено из избранного');
-  } else {
-    addFavorite({
-      id: mangaId,
-      title: card?.querySelector('h3')?.textContent || '',
-      cover: card?.querySelector('img')?.src || '',
-    });
-    btn?.classList.add('active');
-    btn?.querySelector('svg')?.setAttribute('fill', 'currentColor');
-    showToast('Добавлено в избранное', 'success');
-    checkAchievements();
   }
 }

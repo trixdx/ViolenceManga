@@ -27,6 +27,8 @@ let chromeVisible = true;
 let lastTrackedPage = -1;
 let autoScrollTimer = null;
 let autoScrollPaused = false;
+/** @type {string[]} */
+let activeBlobUrls = [];
 
 const AUTO_SCROLL_SPEEDS = [0, 1, 2, 4, 6, 10];
 const AUTO_SCROLL_LABEL_KEYS = [
@@ -35,7 +37,7 @@ const AUTO_SCROLL_LABEL_KEYS = [
   'settings.autoScrollNormal',
   'settings.autoScrollFast',
   'settings.autoScrollFaster',
-  'settings.autoScrollFaster',
+  'settings.autoScrollFastest',
 ];
 
 const ZOOM_MIN = 0.5;
@@ -57,6 +59,7 @@ export async function openReader(mangaId, mangaTitle, chapter, options = {}) {
     return;
   }
 
+  revokeBlobUrls();
   currentManga = { id: mangaId, title: mangaTitle };
   currentChapter = chapter;
   allChapters = (options.chapters || [chapter]).filter(ch => ch.readable !== false && !ch.externalUrl);
@@ -66,7 +69,11 @@ export async function openReader(mangaId, mangaTitle, chapter, options = {}) {
   if (chapterIndex < 0) chapterIndex = 0;
 
   const bookmark = getBookmark(mangaId);
-  if (bookmark?.chapterId === chapter.id && bookmark.pageIndex > 0) {
+  if (options.startPage === -1) {
+    currentPage = 0;
+  } else if (Number.isFinite(options.startPage) && options.startPage >= 0) {
+    currentPage = options.startPage;
+  } else if (bookmark?.chapterId === chapter.id && bookmark.pageIndex > 0) {
     currentPage = bookmark.pageIndex;
   } else {
     currentPage = 0;
@@ -89,6 +96,7 @@ export async function openReader(mangaId, mangaTitle, chapter, options = {}) {
     const offlinePages = await getOfflineChapter(chapter.id);
     if (offlinePages?.length) {
       currentPages = offlinePages;
+      activeBlobUrls = offlinePages.map(p => p.url).filter(Boolean);
       showToast(t('reader.offline'), 'info');
     } else {
       const cached = await getPrefetchedChapterPages(chapter.id);
@@ -98,6 +106,7 @@ export async function openReader(mangaId, mangaTitle, chapter, options = {}) {
       showReaderError(t('reader.loadFail'));
       return;
     }
+    if (options.startPage === -1) currentPage = currentPages.length - 1;
     if (currentPage >= currentPages.length) currentPage = 0;
     renderPages();
     renderThumbnails();
@@ -162,12 +171,18 @@ function syncControlButtons() {
   document.getElementById('reader-autoscroll')?.classList.toggle('active', speed > 0);
 }
 
+function revokeBlobUrls() {
+  activeBlobUrls.forEach((u) => URL.revokeObjectURL(u));
+  activeBlobUrls = [];
+}
+
 function updateReaderTitle() {
   document.getElementById('reader-title').textContent =
     `${currentManga.title} — ${currentChapter.title}`;
 }
 
 function isSpreadMode() {
+  if (window.matchMedia('(max-width: 640px)').matches) return false;
   return viewport().classList.contains('spread');
 }
 
@@ -352,7 +367,10 @@ function updateChapterButtons() {
 let chapterCompleted = false;
 
 function checkChapterComplete() {
-  if (chapterCompleted) return;
+  if (chapterCompleted || !currentPages.length) return;
+  if (currentPage < currentPages.length - 1) return;
+  const minRead = Math.max(0, Math.floor(currentPages.length * 0.8) - 1);
+  if (lastTrackedPage < minRead) return;
   chapterCompleted = true;
   finishChapter();
 }
@@ -374,7 +392,10 @@ function finishChapter() {
 }
 
 function goToPage(index, smooth = true) {
-  if (index < 0) return;
+  if (index < 0) {
+    if (chapterIndex > 0) goToChapter(chapterIndex - 1, { lastPage: true });
+    return;
+  }
   if (index >= currentPages.length) {
     if (chapterIndex < allChapters.length - 1) goToChapter(chapterIndex + 1);
     else checkChapterComplete();
@@ -394,12 +415,14 @@ function goToPage(index, smooth = true) {
   saveProgress();
 }
 
-async function goToChapter(index) {
+async function goToChapter(index, opts = {}) {
   if (index < 0 || index >= allChapters.length) return;
   saveProgress();
   chapterCompleted = false;
   await openReader(currentManga.id, currentManga.title, allChapters[index], {
-    chapters: allChapters, cover: coverUrl,
+    chapters: allChapters,
+    cover: coverUrl,
+    startPage: opts.lastPage ? -1 : undefined,
   });
 }
 
@@ -506,6 +529,7 @@ export function closeReader() {
   if (currentManga && currentChapter) saveProgress();
   stopReadTimer();
   stopAutoScroll();
+  revokeBlobUrls();
   if (document.fullscreenElement) document.exitFullscreen?.();
   overlay().hidden = true;
   overlay().setAttribute('hidden', '');

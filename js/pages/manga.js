@@ -13,6 +13,8 @@ import {
 
 let cachedChapters = [];
 let cachedOfflineIds = new Set();
+/** @type {{ mangaId: string, manga: object, cover: string, openReader: Function } | null} */
+let chapterBindCtx = null;
 
 export async function renderMangaDetail(container, mangaId, navigate, openReader) {
   showLoading(container);
@@ -207,9 +209,13 @@ function bindChapterItems(container, mangaId, manga, cover, openReader) {
 function refreshChapterList(container) {
   const list = document.getElementById('chapter-list');
   if (list) list.innerHTML = renderChapterList(cachedChapters, getState());
+  if (chapterBindCtx) {
+    bindChapterItems(container, chapterBindCtx.mangaId, chapterBindCtx.manga, chapterBindCtx.cover, chapterBindCtx.openReader);
+  }
 }
 
 function bindEvents(container, mangaId, manga, cover, startChapter, openReader, navigate, totalChapters) {
+  chapterBindCtx = { mangaId, manga, cover, openReader };
   const open = (ch) => openReader(mangaId, manga.title, ch, { chapters: cachedChapters, cover });
 
   document.getElementById('read-btn')?.addEventListener('click', () => {

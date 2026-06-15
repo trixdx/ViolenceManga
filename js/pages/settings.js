@@ -13,6 +13,7 @@ import { t, setUiLanguage, applyDocumentI18n } from '../i18n.js';
 import { clearPrefetchCache } from '../prefetch.js';
 import { getOfflineCacheStats, clearOfflineCache } from '../offline.js';
 import { promptInstall } from '../pwa.js';
+import { invalidateAllChapterCache } from '../api.js';
 
 const TABS = [
   { id: 'appearance', labelKey: 'settings.tab.appearance', icon: '🎨' },
@@ -220,6 +221,17 @@ function renderTab(tab, s, profile) {
           <select class="select-input" data-setting="language">
             <option value="ru" ${s.language === 'ru' ? 'selected' : ''}>Русский</option>
             <option value="en" ${s.language === 'en' ? 'selected' : ''}>English</option>
+            <option value="es" ${s.language === 'es' ? 'selected' : ''}>Español</option>
+            <option value="pt-br" ${s.language === 'pt-br' ? 'selected' : ''}>Português (BR)</option>
+            <option value="tr" ${s.language === 'tr' ? 'selected' : ''}>Türkçe</option>
+            <option value="fr" ${s.language === 'fr' ? 'selected' : ''}>Français</option>
+            <option value="de" ${s.language === 'de' ? 'selected' : ''}>Deutsch</option>
+            <option value="it" ${s.language === 'it' ? 'selected' : ''}>Italiano</option>
+            <option value="pl" ${s.language === 'pl' ? 'selected' : ''}>Polski</option>
+            <option value="uk" ${s.language === 'uk' ? 'selected' : ''}>Українська</option>
+            <option value="ja" ${s.language === 'ja' ? 'selected' : ''}>日本語</option>
+            <option value="ko" ${s.language === 'ko' ? 'selected' : ''}>한국어</option>
+            <option value="zh" ${s.language === 'zh' ? 'selected' : ''}>中文</option>
           </select>
         </div>
         <div class="setting-row">
@@ -351,7 +363,9 @@ function bindSettingsLogic(container, navigate, activeTab) {
         : select.value;
       updateSettings({ [select.dataset.setting]: val });
       if (select.dataset.setting === 'prefetchAhead') clearPrefetchCache();
-      else refreshVisuals();
+      else if (select.dataset.setting === 'language' || select.dataset.setting === 'chapterSort') {
+        invalidateAllChapterCache();
+      } else refreshVisuals();
       showToast(t('toast.saved'));
     });
   });
